@@ -59,7 +59,7 @@ def main():
                         help="The ids of the PVPs to be used (only for PET training)")
     parser.add_argument("--repetitions", default=3, type=int,
                         help="The number of times to repeat training and testing with different seeds.")
-    parser.add_argument("--ensemble", action='store_true',
+    parser.add_argument("--ensembling", action='store_true',
                         help="Whether to calculate the ensembled performance of all trained models")
     parser.add_argument("--lm_training", action='store_true',
                         help="Whether to use language modeling as auxiliary task (only for PET training)")
@@ -214,7 +214,7 @@ def main():
                 logger.info("Saving complete")
 
                 if args.save_train_logits:
-                    logits = wrapper.eval(all_train_data, device, output_logits=True, **vars(args))
+                    logits, _ = wrapper.eval(all_train_data, device, output_logits=True, **vars(args))[0]
                     save_logits(os.path.join(output_dir, 'logits.txt'), logits)
 
                 if not args.do_eval:
@@ -229,7 +229,8 @@ def main():
                     wrapper = TransformerModelWrapper.from_pretrained(output_dir)
                     wrapper.model.to(device)
 
-                result = wrapper.eval(eval_data, device, output_logits=True, **vars(args))
+                logits, result = wrapper.eval(eval_data, device, output_logits=True, **vars(args))
+                save_logits(os.path.join(output_dir, 'test_logits.txt'), logits)
                 logger.info("--- RESULT (pattern_id={}, iteration={}) ---".format(pattern_id, iteration))
                 logger.info(result)
 

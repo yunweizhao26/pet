@@ -324,11 +324,12 @@ class TransformerModelWrapper:
                 preds = np.append(preds, logits.detach().cpu().numpy(), axis=0)
                 out_label_ids = np.append(out_label_ids, labels.detach().cpu().numpy(), axis=0)
 
-        if output_logits:
-            return preds
-
         preds = np.argmax(preds, axis=1)
-        return {"acc": simple_accuracy(preds, out_label_ids)}
+
+        if output_logits:
+            return preds, {"acc": simple_accuracy(preds, out_label_ids)}
+        else:
+            return {"acc": simple_accuracy(preds, out_label_ids)}
 
     def _generate_dataset(self, data: List[InputExample], labelled: bool = True):
         features = self._convert_examples_to_features(data, labelled)
