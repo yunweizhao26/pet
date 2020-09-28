@@ -300,7 +300,7 @@ class TransformerModelWrapper:
             self.model = torch.nn.DataParallel(self.model)
 
         nb_eval_steps = 0
-        logits = None
+        np_logits = None
         out_label_ids = None
 
         for batch in tqdm(eval_dataloader, desc="Evaluating"):
@@ -317,17 +317,17 @@ class TransformerModelWrapper:
                 if self.config.wrapper_type == MLM_WRAPPER:
                     logits = self.preprocessor.pvp.convert_mlm_logits_to_cls_logits(mlm_labels, logits)
             nb_eval_steps += 1
-            if logits is None:
-                logits = logits.detach().cpu().numpy()
+            if np_logits is None:
+                np_logits = logits.detach().cpu().numpy()
                 out_label_ids = labels.detach().cpu().numpy()
             else:
-                logits = np.append(logits, logits.detach().cpu().numpy(), axis=0)
+                np_logits = np.append(np_logits, logits.detach().cpu().numpy(), axis=0)
                 out_label_ids = np.append(out_label_ids, labels.detach().cpu().numpy(), axis=0)
 
-        preds = np.argmax(logits, axis=1)
+        preds = np.argmax(np_logits, axis=1)
 
         if output_logits:
-            return logits, {"acc": simple_accuracy(preds, out_label_ids)}
+            return np_logits, {"acc": simple_accuracy(preds, out_label_ids)}
         else:
             return {"acc": simple_accuracy(preds, out_label_ids)}
 

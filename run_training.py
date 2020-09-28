@@ -266,7 +266,7 @@ def main():
         fh.write(result_str + '\n')
 
         if args.ensembling is not None:
-            labels = wrapper._generate_dataset(eval_data)[3].numpy()
+            labels = np.array([f.label for f in wrapper._convert_examples_to_features(eval_data, True)])
             if args.ensembling == "sum":
                 total_logits = sum(test_logits)
                 preds = np.argmax(total_logits, axis=1)
