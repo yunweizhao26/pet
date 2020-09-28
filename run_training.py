@@ -274,7 +274,7 @@ def main():
             else:
                 raise NotImplementedError
                 # all_preds = [np.argmax(logits, axis=1) for logits in test_logits]
-            ensembled_result_str = "acc-ens-p: {}".format(all_mean, acc)
+            ensembled_result_str = "acc-ens-p: {}".format(acc)
             logger.info(ensembled_result_str)
             fh.write(ensembled_result_str + '\n')
 
