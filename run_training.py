@@ -20,6 +20,8 @@ import os
 import statistics
 from collections import defaultdict
 import torch
+import numpy as np
+from transformers.data.metrics import simple_accuracy
 
 from tasks import PROCESSORS, load_examples
 from utils import set_seed, eq_div, save_logits, LogitsList, InputExample
@@ -59,7 +61,7 @@ def main():
                         help="The ids of the PVPs to be used (only for PET training)")
     parser.add_argument("--repetitions", default=3, type=int,
                         help="The number of times to repeat training and testing with different seeds.")
-    parser.add_argument("--ensembling", action='store_true',
+    parser.add_argument("--ensembling", default=None, type=str, choices=['sum', 'vote'],
                         help="Whether to calculate the ensembled performance of all trained models")
     parser.add_argument("--lm_training", action='store_true',
                         help="Whether to use language modeling as auxiliary task (only for PET training)")
@@ -145,6 +147,7 @@ def main():
 
     logger.info("Training/evaluation parameters: {}".format(args))
     results = defaultdict(list)
+    test_logits = []
 
     train_examples_per_label = eq_div(args.train_examples, len(args.label_list)) if args.train_examples != -1 else -1
     test_examples_per_label = eq_div(args.test_examples, len(args.label_list)) if args.test_examples != -1 else -1
@@ -230,6 +233,7 @@ def main():
                     wrapper.model.to(device)
 
                 logits, result = wrapper.eval(eval_data, device, output_logits=True, **vars(args))
+                test_logits.append(logits)
                 save_logits(os.path.join(output_dir, 'test_logits.txt'), logits)
                 logger.info("--- RESULT (pattern_id={}, iteration={}) ---".format(pattern_id, iteration))
                 logger.info(result)
@@ -260,6 +264,19 @@ def main():
         result_str = "acc-all-p: {} +- {}".format(all_mean, all_stdev)
         logger.info(result_str)
         fh.write(result_str + '\n')
+
+        if args.ensembling is not None:
+            labels = wrapper._generate_dataset(eval_data)[3].numpy()
+            if args.ensembling == "sum":
+                total_logits = sum(test_logits)
+                preds = np.argmax(total_logits, axis=1)
+                acc = simple_accuracy(preds, labels)
+            else:
+                raise NotImplementedError
+                # all_preds = [np.argmax(logits, axis=1) for logits in test_logits]
+            ensembled_result_str = "acc-ens-p: {}".format(all_mean, acc)
+            logger.info(ensembled_result_str)
+            fh.write(ensembled_result_str + '\n')
 
 
 if __name__ == "__main__":

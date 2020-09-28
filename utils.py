@@ -105,6 +105,17 @@ def eq_div(N, i):
     return [] if i <= 0 else [N // i + 1] * (N % i) + [N // i] * (i - N % i)
 
 
+def load_logits(path: str):
+    logits = []
+    with open(path, 'r') as fh:
+        for line in fh.readlines():
+            try:
+                logits.append(float(line))
+            except ValueError:
+                continue
+    pass
+
+
 def save_logits(path: str, logits: np.ndarray):
     with open(path, 'w') as fh:
         for example_logits in logits:
