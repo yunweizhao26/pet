@@ -352,7 +352,8 @@ def train_pet_ensemble(model_config: WrapperConfig, train_config: TrainConfig, e
 
                 results_dict.update(train_single_model(wrapper, train_data, train_config, eval_config,
                                                        ipet_train_data=ipet_train_data,
-                                                       unlabeled_data=unlabeled_data))
+                                                       unlabeled_data=unlabeled_data,
+                                                       return_train_set_results=False))
 
                 with open(os.path.join(pattern_iter_output_dir, 'results.txt'), 'w') as fh:
                     fh.write(str(results_dict))
