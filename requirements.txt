@@ -23,7 +23,7 @@ scipy==1.5.2
 sentencepiece==0.1.92
 six==1.15.0
 threadpoolctl==2.1.0
-tokenizers==0.5.2
+tokenizers
 tqdm==4.50.0
 transformers
 urllib3==1.25.10

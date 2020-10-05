@@ -425,9 +425,9 @@ class TransformerModelWrapper:
             if self.task_helper:
                 self.task_helper.add_special_input_features(example, input_features)
             features.append(input_features)
-            if ex_index < 5:
-                logger.info(f'--- Example {ex_index} ---')
-                logger.info(input_features.pretty_print(self.tokenizer))
+            # if ex_index < 5:
+            #     logger.info(f'--- Example {ex_index} ---')
+            #     logger.info(input_features.pretty_print(self.tokenizer))
         return features
 
     def _mask_tokens(self, input_ids):
