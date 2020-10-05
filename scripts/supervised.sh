@@ -2,8 +2,8 @@ python3 cli.py \
 --method sequence_classifier \
 --pattern_ids 0 \
 --data_dir data/MNLI \
---model_type bert \
---model_name_or_path bert-base-cased \
+--model_type roberta \
+--model_name_or_path roberta-large \
 --task_name mnli \
 --output_dir experiments/mnli/supervised \
 --do_train \
