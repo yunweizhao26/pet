@@ -22,7 +22,7 @@ import torch
 
 import log
 import pet
-from argparsing import parser
+from pet.argparsing import parser
 from pet.tasks import PROCESSORS, load_examples, UNLABELED_SET, TRAIN_SET, DEV_SET, TEST_SET, METRICS, DEFAULT_METRICS
 from pet.utils import eq_div
 from pet.wrapper import SEQUENCE_CLASSIFIER_WRAPPER, WrapperConfig

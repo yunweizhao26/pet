@@ -1,7 +1,7 @@
 import argparse
 
-from tasks import PROCESSORS
-from wrapper import MODEL_CLASSES, WRAPPER_TYPES
+from pet.tasks import PROCESSORS
+from pet.wrapper import MODEL_CLASSES, WRAPPER_TYPES
 
 parser = argparse.ArgumentParser(description="Command line interface for PET/iPET")
 
