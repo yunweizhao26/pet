@@ -21,5 +21,4 @@ python3 cli.py \
 --sc_max_seq_length 256 \
 --sc_repetitions 1 \
 --train_examples 100 \
---eval_set test \
 --overwrite_output_dir \
