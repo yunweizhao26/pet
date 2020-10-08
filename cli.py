@@ -15,10 +15,10 @@ This script can be used to train and evaluate either a regular supervised model 
 one of the supported tasks and datasets.
 """
 
-import os
 from typing import Tuple
 
 import torch
+import wandb
 
 import log
 import pet
@@ -126,29 +126,40 @@ def main():
     ipet_cfg = load_ipet_config(args)
 
     if args.method == 'pet':
-        pet.train_pet(pet_model_cfg, pet_train_cfg, pet_eval_cfg, sc_model_cfg, sc_train_cfg, sc_eval_cfg,
-                      pattern_ids=args.pattern_ids, output_dir=args.output_dir,
-                      ensemble_repetitions=args.pet_repetitions, final_repetitions=args.sc_repetitions,
-                      reduction=args.reduction, train_data=train_data, unlabeled_data=unlabeled_data,
-                      eval_data=eval_data, do_train=args.do_train, do_eval=args.do_eval,
-                      no_distillation=args.no_distillation, seed=args.seed, overwrite_dir=args.overwrite_output_dir)
+        final_results = pet.train_pet(pet_model_cfg, pet_train_cfg, pet_eval_cfg, sc_model_cfg, sc_train_cfg,
+                                      sc_eval_cfg,
+                                      pattern_ids=args.pattern_ids, output_dir=args.output_dir,
+                                      ensemble_repetitions=args.pet_repetitions, final_repetitions=args.sc_repetitions,
+                                      reduction=args.reduction, train_data=train_data, unlabeled_data=unlabeled_data,
+                                      eval_data=eval_data, do_train=args.do_train, do_eval=args.do_eval,
+                                      no_distillation=args.no_distillation, seed=args.seed,
+                                      overwrite_dir=args.overwrite_output_dir)
 
     elif args.method == 'ipet':
-        pet.train_ipet(pet_model_cfg, pet_train_cfg, pet_eval_cfg, ipet_cfg, sc_model_cfg, sc_train_cfg, sc_eval_cfg,
-                       pattern_ids=args.pattern_ids, output_dir=args.output_dir,
-                       ensemble_repetitions=args.pet_repetitions, final_repetitions=args.sc_repetitions,
-                       reduction=args.reduction, train_data=train_data, unlabeled_data=unlabeled_data,
-                       eval_data=eval_data, do_train=args.do_train, do_eval=args.do_eval, seed=args.seed,
-                       overwrite_dir=args.overwrite_output_dir)
+        final_results = pet.train_ipet(pet_model_cfg, pet_train_cfg, pet_eval_cfg, ipet_cfg, sc_model_cfg, sc_train_cfg,
+                                       sc_eval_cfg,
+                                       pattern_ids=args.pattern_ids, output_dir=args.output_dir,
+                                       ensemble_repetitions=args.pet_repetitions, final_repetitions=args.sc_repetitions,
+                                       reduction=args.reduction, train_data=train_data, unlabeled_data=unlabeled_data,
+                                       eval_data=eval_data, do_train=args.do_train, do_eval=args.do_eval,
+                                       seed=args.seed,
+                                       overwrite_dir=args.overwrite_output_dir)
 
     elif args.method == 'sequence_classifier':
-        pet.train_classifier(sc_model_cfg, sc_train_cfg, sc_eval_cfg, output_dir=args.output_dir,
-                             repetitions=args.sc_repetitions, train_data=train_data, unlabeled_data=unlabeled_data,
-                             eval_data=eval_data, do_train=args.do_train, do_eval=args.do_eval, seed=args.seed,
-                             overwrite_dir=args.overwrite_output_dir)
+        final_results = pet.train_classifier(sc_model_cfg, sc_train_cfg, sc_eval_cfg, output_dir=args.output_dir,
+                                             repetitions=args.sc_repetitions, train_data=train_data,
+                                             unlabeled_data=unlabeled_data,
+                                             eval_data=eval_data, do_train=args.do_train, do_eval=args.do_eval,
+                                             seed=args.seed,
+                                             overwrite_dir=args.overwrite_output_dir)
 
     else:
         raise ValueError(f"Training method '{args.method}' not implemented")
+
+    if final_results is not None:
+        wandb.init(project="pvp-vs-finetuning")
+        final_results["training_points"] = args.train_examples
+        wandb.log(final_results)
 
 
 if __name__ == "__main__":

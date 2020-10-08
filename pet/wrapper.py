@@ -15,13 +15,13 @@ This file contains code for wrapping a transformer language model and
 provides convenience methods for training and inference.
 """
 import json
-import jsonpickle
 import os
 from typing import List, Dict, Optional
 
+import jsonpickle
+import numpy as np
 import torch
 import torch.nn as nn
-import numpy as np
 from torch.utils.data import RandomSampler, DataLoader, SequentialSampler
 from tqdm import trange, tqdm
 from transformers import InputExample, AdamW, get_linear_schedule_with_warmup, PreTrainedTokenizer, BertForMaskedLM, \
@@ -130,6 +130,7 @@ class WrapperConfig(object):
         self.pattern_id = pattern_id
         self.verbalizer_file = verbalizer_file
         self.cache_dir = cache_dir
+        self.loggers_initialized = False
 
 
 class TransformerModelWrapper:

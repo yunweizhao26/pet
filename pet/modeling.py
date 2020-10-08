@@ -210,9 +210,13 @@ def train_ipet(ensemble_model_config: WrapperConfig, ensemble_train_config: Trai
     final_model_config.wrapper_type = SEQUENCE_CLASSIFIER_WRAPPER
     final_train_config.use_logits = True
 
-    train_classifier(final_model_config, final_train_config, final_eval_config, os.path.join(output_dir, 'final'),
-                     repetitions=final_repetitions, train_data=train_data, unlabeled_data=unlabeled_data,
-                     eval_data=eval_data, do_train=do_train, do_eval=do_eval)
+    final_results = train_classifier(final_model_config, final_train_config, final_eval_config,
+                                     os.path.join(output_dir, 'final'),
+                                     repetitions=final_repetitions, train_data=train_data,
+                                     unlabeled_data=unlabeled_data,
+                                     eval_data=eval_data, do_train=do_train, do_eval=do_eval)
+
+    return final_results
 
 
 def train_pet(ensemble_model_config: WrapperConfig, ensemble_train_config: TrainConfig,
@@ -245,13 +249,16 @@ def train_pet(ensemble_model_config: WrapperConfig, ensemble_train_config: Train
     """
 
     # Step 1: Train an ensemble of models corresponding to individual patterns
-    train_pet_ensemble(ensemble_model_config, ensemble_train_config, ensemble_eval_config, pattern_ids, output_dir,
-                       repetitions=ensemble_repetitions, train_data=train_data, unlabeled_data=unlabeled_data,
-                       eval_data=eval_data, do_train=do_train, do_eval=do_eval,
-                       save_unlabeled_logits=not no_distillation, seed=seed, overwrite_dir=overwrite_dir)
+    final_results = train_pet_ensemble(ensemble_model_config, ensemble_train_config, ensemble_eval_config, pattern_ids,
+                                       output_dir,
+                                       repetitions=ensemble_repetitions, train_data=train_data,
+                                       unlabeled_data=unlabeled_data,
+                                       eval_data=eval_data, do_train=do_train, do_eval=do_eval,
+                                       save_unlabeled_logits=not no_distillation, seed=seed,
+                                       overwrite_dir=overwrite_dir)
 
     if no_distillation:
-        return
+        return final_results
 
     # Step 2: Merge the annotations created by each individual model
     logits_file = os.path.join(output_dir, 'unlabeled_logits.txt')
@@ -266,9 +273,10 @@ def train_pet(ensemble_model_config: WrapperConfig, ensemble_train_config: Train
     final_model_config.wrapper_type = SEQUENCE_CLASSIFIER_WRAPPER
     final_train_config.use_logits = True
 
-    train_classifier(final_model_config, final_train_config, final_eval_config, os.path.join(output_dir, 'final'),
-                     repetitions=final_repetitions, train_data=train_data, unlabeled_data=unlabeled_data,
-                     eval_data=eval_data, do_train=do_train, do_eval=do_eval, seed=seed)
+    return train_classifier(final_model_config, final_train_config, final_eval_config,
+                            os.path.join(output_dir, 'final'),
+                            repetitions=final_repetitions, train_data=train_data, unlabeled_data=unlabeled_data,
+                            eval_data=eval_data, do_train=do_train, do_eval=do_eval, seed=seed)
 
 
 def train_classifier(model_config: WrapperConfig, train_config: TrainConfig, eval_config: EvalConfig, output_dir: str,
@@ -291,10 +299,13 @@ def train_classifier(model_config: WrapperConfig, train_config: TrainConfig, eva
     :param seed: the random seed to use
     """
 
-    train_pet_ensemble(model_config, train_config, eval_config, pattern_ids=[0], output_dir=output_dir,
-                       repetitions=repetitions,
-                       train_data=train_data, unlabeled_data=unlabeled_data, eval_data=eval_data, do_train=do_train,
-                       do_eval=do_eval, seed=seed, overwrite_dir=overwrite_dir)
+    final_results = train_pet_ensemble(model_config, train_config, eval_config, pattern_ids=[0], output_dir=output_dir,
+                                       repetitions=repetitions,
+                                       train_data=train_data, unlabeled_data=unlabeled_data, eval_data=eval_data,
+                                       do_train=do_train,
+                                       do_eval=do_eval, seed=seed, overwrite_dir=overwrite_dir)
+
+    return final_results
 
 
 def train_pet_ensemble(model_config: WrapperConfig, train_config: TrainConfig, eval_config: EvalConfig,
@@ -403,9 +414,11 @@ def train_pet_ensemble(model_config: WrapperConfig, train_config: TrainConfig, e
 
     if do_eval:
         logger.info("=== OVERALL RESULTS ===")
-        _write_results(os.path.join(output_dir, 'result_test.txt'), results)
+        results_to_log = _write_results(os.path.join(output_dir, 'result_test.txt'), results)
+        return results_to_log
     else:
         logger.info("=== ENSEMBLE TRAINING COMPLETE ===")
+        return
 
 
 def train_single_model(model: TransformerModelWrapper, train_data: List[InputExample], config: TrainConfig,
@@ -512,7 +525,9 @@ def evaluate(model: TransformerModelWrapper, eval_data: List[InputExample], conf
     return results
 
 
-def _write_results(path: str, results: Dict):
+def _write_results(path: str, results: Dict) -> Dict:
+    final_results_dict = {}
+
     with open(path, 'w') as fh:
         for metric in results.keys():
             for pattern_id, values in results[metric].items():
@@ -521,6 +536,7 @@ def _write_results(path: str, results: Dict):
                 result_str = "{}-p{}: {} +- {}".format(metric, pattern_id, mean, stdev)
                 logger.info(result_str)
                 fh.write(result_str + '\n')
+                final_results_dict[f"{metric}-p{pattern_id}"] = mean
 
         for metric in results.keys():
             all_results = [result for pattern_results in results[metric].values() for result in pattern_results]
@@ -529,6 +545,9 @@ def _write_results(path: str, results: Dict):
             result_str = "{}-all-p: {} +- {}".format(metric, all_mean, all_stdev)
             logger.info(result_str)
             fh.write(result_str + '\n')
+            final_results_dict[f"{metric}-all-p"] = all_mean
+
+    return final_results_dict
 
 
 def merge_logits(logits_dir: str, output_file: str, reduction: str):
