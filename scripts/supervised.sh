@@ -17,7 +17,7 @@ python3 cli.py \
 --sc_per_gpu_train_batch_size 4 \
 --sc_per_gpu_unlabeled_batch_size 16 \
 --sc_gradient_accumulation_steps 4 \
---sc_max_steps 5000 \
+--sc_num_train_epochs 5 \
 --sc_max_seq_length 256 \
 --sc_repetitions 1 \
 --train_examples 100 \

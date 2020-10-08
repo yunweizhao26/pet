@@ -27,4 +27,5 @@ tokenizers
 tqdm==4.50.0
 transformers
 urllib3==1.25.10
+wandb
 zipp==3.2.0
