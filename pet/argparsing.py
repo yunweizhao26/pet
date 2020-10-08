@@ -91,8 +91,7 @@ parser.add_argument("--ipet_n_most_likely", default=-1, type=int,
                          "if their predicted label is different (only for iPET)")
 
 # Other optional parameters
-parser.add_argument("--train_examples", default=-1, type=int,
-                    help="The total number of train examples to use, where -1 equals all examples.")
+parser.add_argument("--train_examples", nargs="+", default=[-1], type=int)
 parser.add_argument("--test_examples", default=-1, type=int,
                     help="The total number of test examples to use, where -1 equals all examples.")
 parser.add_argument("--unlabeled_examples", default=-1, type=int,

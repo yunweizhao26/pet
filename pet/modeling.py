@@ -17,7 +17,7 @@ import statistics
 from abc import ABC
 from collections import defaultdict
 from copy import deepcopy
-from typing import List, Dict
+from typing import List, Dict, Union
 
 import numpy as np
 import torch
@@ -299,7 +299,8 @@ def train_classifier(model_config: WrapperConfig, train_config: TrainConfig, eva
     :param seed: the random seed to use
     """
 
-    final_results = train_pet_ensemble(model_config, train_config, eval_config, pattern_ids=[0], output_dir=output_dir,
+    final_results = train_pet_ensemble(model_config, train_config, eval_config, pattern_ids=["supervised"],
+                                       output_dir=output_dir,
                                        repetitions=repetitions,
                                        train_data=train_data, unlabeled_data=unlabeled_data, eval_data=eval_data,
                                        do_train=do_train,
@@ -309,7 +310,8 @@ def train_classifier(model_config: WrapperConfig, train_config: TrainConfig, eva
 
 
 def train_pet_ensemble(model_config: WrapperConfig, train_config: TrainConfig, eval_config: EvalConfig,
-                       pattern_ids: List[int], output_dir: str, ipet_data_dir: str = None, repetitions: int = 3,
+                       pattern_ids: List[Union[str, int]], output_dir: str, ipet_data_dir: str = None,
+                       repetitions: int = 3,
                        train_data: List[InputExample] = None, unlabeled_data: List[InputExample] = None,
                        eval_data: List[InputExample] = None, do_train: bool = True, do_eval: bool = True,
                        save_unlabeled_logits: bool = False, seed: int = 42, overwrite_dir: bool = False):
@@ -342,7 +344,8 @@ def train_pet_ensemble(model_config: WrapperConfig, train_config: TrainConfig, e
             model_config.pattern_id = pattern_id
             results_dict = {}
 
-            pattern_iter_output_dir = "{}/p{}-i{}".format(output_dir, pattern_id, iteration)
+            shots = 0 if train_data is None else len(train_data)
+            pattern_iter_output_dir = "{}/{}shots-{}-i{}".format(output_dir, shots, pattern_name(pattern_id), iteration)
 
             if os.path.exists(pattern_iter_output_dir) and not overwrite_dir:
                 logger.warning(f"Path {pattern_iter_output_dir} already exists, skipping it...")
@@ -356,7 +359,7 @@ def train_pet_ensemble(model_config: WrapperConfig, train_config: TrainConfig, e
             # Training
             if do_train:
                 if ipet_data_dir:
-                    p = os.path.join(ipet_data_dir, 'p{}-i{}-train.bin'.format(pattern_id, iteration))
+                    p = os.path.join(ipet_data_dir, '{}-i{}-train.bin'.format(pattern_name(pattern_id), iteration))
                     ipet_train_data = InputExample.load_examples(p)
                     for example in ipet_train_data:
                         example.logits = None
@@ -533,10 +536,10 @@ def _write_results(path: str, results: Dict) -> Dict:
             for pattern_id, values in results[metric].items():
                 mean = statistics.mean(values)
                 stdev = statistics.stdev(values) if len(values) > 1 else 0
-                result_str = "{}-p{}: {} +- {}".format(metric, pattern_id, mean, stdev)
+                result_str = "{}-{}: {} +- {}".format(metric, pattern_name(pattern_id), mean, stdev)
                 logger.info(result_str)
                 fh.write(result_str + '\n')
-                final_results_dict[f"{metric}-p{pattern_id}"] = mean
+                final_results_dict[f"{metric}-{pattern_name(pattern_id)}"] = mean
 
         for metric in results.keys():
             all_results = [result for pattern_results in results[metric].values() for result in pattern_results]
@@ -784,3 +787,7 @@ def _draw_examples_by_label_probability(examples: List[InputExample], num_exampl
     sum_label_probabilities = sum(label_probabilities)
     label_probabilities = [p / sum_label_probabilities for p in label_probabilities]
     return rng.choice(examples, size=num_examples, replace=False, p=label_probabilities).tolist()
+
+
+def pattern_name(pattern_id):
+    return pattern_id if pattern_id == "supervised" else f"p{pattern_id}"

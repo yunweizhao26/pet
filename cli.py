@@ -103,63 +103,64 @@ def main():
     processor = PROCESSORS[args.task_name]()
     args.label_list = processor.get_labels()
 
-    train_ex_per_label, test_ex_per_label = None, None
-    train_ex, test_ex = args.train_examples, args.test_examples
-    if args.split_examples_evenly:
-        train_ex_per_label = eq_div(args.train_examples, len(args.label_list)) if args.train_examples != -1 else -1
-        test_ex_per_label = eq_div(args.test_examples, len(args.label_list)) if args.test_examples != -1 else -1
-        train_ex, test_ex = None, None
+    for n_train_examples in args.train_examples:
+        train_ex_per_label, test_ex_per_label = None, None
+        train_ex, test_ex = n_train_examples, args.test_examples
+        if args.split_examples_evenly:
+            train_ex_per_label = eq_div(n_train_examples, len(args.label_list)) if n_train_examples != -1 else -1
+            test_ex_per_label = eq_div(args.test_examples, len(args.label_list)) if args.test_examples != -1 else -1
+            train_ex, test_ex = None, None
 
-    eval_set = TEST_SET if args.eval_set == 'test' else DEV_SET
+        eval_set = TEST_SET if args.eval_set == 'test' else DEV_SET
 
-    train_data = load_examples(
-        args.task_name, args.data_dir, TRAIN_SET, num_examples=train_ex, num_examples_per_label=train_ex_per_label)
-    eval_data = load_examples(
-        args.task_name, args.data_dir, eval_set, num_examples=test_ex, num_examples_per_label=test_ex_per_label)
-    unlabeled_data = load_examples(
-        args.task_name, args.data_dir, UNLABELED_SET, num_examples=args.unlabeled_examples)
+        train_data = load_examples(
+            args.task_name, args.data_dir, TRAIN_SET, num_examples=train_ex, num_examples_per_label=train_ex_per_label)
+        eval_data = load_examples(
+            args.task_name, args.data_dir, eval_set, num_examples=test_ex, num_examples_per_label=test_ex_per_label)
+        unlabeled_data = load_examples(
+            args.task_name, args.data_dir, UNLABELED_SET, num_examples=args.unlabeled_examples)
 
-    args.metrics = METRICS.get(args.task_name, DEFAULT_METRICS)
+        args.metrics = METRICS.get(args.task_name, DEFAULT_METRICS)
 
-    pet_model_cfg, pet_train_cfg, pet_eval_cfg = load_pet_configs(args)
-    sc_model_cfg, sc_train_cfg, sc_eval_cfg = load_sequence_classifier_configs(args)
-    ipet_cfg = load_ipet_config(args)
+        pet_model_cfg, pet_train_cfg, pet_eval_cfg = load_pet_configs(args)
+        sc_model_cfg, sc_train_cfg, sc_eval_cfg = load_sequence_classifier_configs(args)
+        ipet_cfg = load_ipet_config(args)
 
-    if args.method == 'pet':
-        final_results = pet.train_pet(pet_model_cfg, pet_train_cfg, pet_eval_cfg, sc_model_cfg, sc_train_cfg,
-                                      sc_eval_cfg,
-                                      pattern_ids=args.pattern_ids, output_dir=args.output_dir,
-                                      ensemble_repetitions=args.pet_repetitions, final_repetitions=args.sc_repetitions,
-                                      reduction=args.reduction, train_data=train_data, unlabeled_data=unlabeled_data,
-                                      eval_data=eval_data, do_train=args.do_train, do_eval=args.do_eval,
-                                      no_distillation=args.no_distillation, seed=args.seed,
-                                      overwrite_dir=args.overwrite_output_dir)
+        if args.method == 'pet':
+            final_results = pet.train_pet(pet_model_cfg, pet_train_cfg, pet_eval_cfg, sc_model_cfg, sc_train_cfg,
+                                          sc_eval_cfg,
+                                          pattern_ids=args.pattern_ids, output_dir=args.output_dir,
+                                          ensemble_repetitions=args.pet_repetitions, final_repetitions=args.sc_repetitions,
+                                          reduction=args.reduction, train_data=train_data, unlabeled_data=unlabeled_data,
+                                          eval_data=eval_data, do_train=args.do_train, do_eval=args.do_eval,
+                                          no_distillation=args.no_distillation, seed=args.seed,
+                                          overwrite_dir=args.overwrite_output_dir)
 
-    elif args.method == 'ipet':
-        final_results = pet.train_ipet(pet_model_cfg, pet_train_cfg, pet_eval_cfg, ipet_cfg, sc_model_cfg, sc_train_cfg,
-                                       sc_eval_cfg,
-                                       pattern_ids=args.pattern_ids, output_dir=args.output_dir,
-                                       ensemble_repetitions=args.pet_repetitions, final_repetitions=args.sc_repetitions,
-                                       reduction=args.reduction, train_data=train_data, unlabeled_data=unlabeled_data,
-                                       eval_data=eval_data, do_train=args.do_train, do_eval=args.do_eval,
-                                       seed=args.seed,
-                                       overwrite_dir=args.overwrite_output_dir)
+        elif args.method == 'ipet':
+            final_results = pet.train_ipet(pet_model_cfg, pet_train_cfg, pet_eval_cfg, ipet_cfg, sc_model_cfg, sc_train_cfg,
+                                           sc_eval_cfg,
+                                           pattern_ids=args.pattern_ids, output_dir=args.output_dir,
+                                           ensemble_repetitions=args.pet_repetitions, final_repetitions=args.sc_repetitions,
+                                           reduction=args.reduction, train_data=train_data, unlabeled_data=unlabeled_data,
+                                           eval_data=eval_data, do_train=args.do_train, do_eval=args.do_eval,
+                                           seed=args.seed,
+                                           overwrite_dir=args.overwrite_output_dir)
 
-    elif args.method == 'sequence_classifier':
-        final_results = pet.train_classifier(sc_model_cfg, sc_train_cfg, sc_eval_cfg, output_dir=args.output_dir,
-                                             repetitions=args.sc_repetitions, train_data=train_data,
-                                             unlabeled_data=unlabeled_data,
-                                             eval_data=eval_data, do_train=args.do_train, do_eval=args.do_eval,
-                                             seed=args.seed,
-                                             overwrite_dir=args.overwrite_output_dir)
+        elif args.method == 'sequence_classifier':
+            final_results = pet.train_classifier(sc_model_cfg, sc_train_cfg, sc_eval_cfg, output_dir=args.output_dir,
+                                                 repetitions=args.sc_repetitions, train_data=train_data,
+                                                 unlabeled_data=unlabeled_data,
+                                                 eval_data=eval_data, do_train=args.do_train, do_eval=args.do_eval,
+                                                 seed=args.seed,
+                                                 overwrite_dir=args.overwrite_output_dir)
 
-    else:
-        raise ValueError(f"Training method '{args.method}' not implemented")
+        else:
+            raise ValueError(f"Training method '{args.method}' not implemented")
 
-    if final_results is not None:
-        wandb.init(project="pvp-vs-finetuning")
-        final_results["training_points"] = args.train_examples
-        wandb.log(final_results)
+        if final_results is not None:
+            wandb.init(project="pvp-vs-finetuning")
+            final_results["training_points"] = n_train_examples
+            wandb.log(final_results)
 
 
 if __name__ == "__main__":
