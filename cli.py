@@ -103,6 +103,8 @@ def main():
     processor = PROCESSORS[args.task_name]()
     args.label_list = processor.get_labels()
 
+    wandb_initalized = False
+
     for n_train_examples in args.train_examples:
         train_ex_per_label, test_ex_per_label = None, None
         train_ex, test_ex = n_train_examples, args.test_examples
@@ -158,7 +160,9 @@ def main():
             raise ValueError(f"Training method '{args.method}' not implemented")
 
         if final_results is not None:
-            wandb.init(project="pvp-vs-finetuning")
+            if not wandb_initalized:
+                wandb.init(project="pvp-vs-finetuning")
+                wandb_initalized = True
             final_results["training_points"] = n_train_examples
             wandb.log(final_results)
 
