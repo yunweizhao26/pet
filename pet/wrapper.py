@@ -197,7 +197,7 @@ class TransformerModelWrapper:
               learning_rate: float = 5e-5, adam_epsilon: float = 1e-8, warmup_steps=0, max_grad_norm: float = 1,
               logging_steps: int = 50, per_gpu_unlabeled_batch_size: int = 8, unlabeled_data: List[InputExample] = None,
               lm_training: bool = False, use_logits: bool = False, alpha: float = 0.8, temperature: float = 1,
-              max_steps=-1, **_):
+              max_steps=-1, min_steps=-1, **_):
         """
         Train the underlying language model.
 
@@ -220,6 +220,7 @@ class TransformerModelWrapper:
         :param alpha: the alpha parameter for auxiliary language modeling
         :param temperature: the temperature for knowledge distillation
         :param max_steps: the maximum number of training steps, overrides ``num_train_epochs``
+        :param min_steps: the minimum number of training steps, to use with ``num_train_epochs``
         :return: a tuple consisting of the total number of steps and the average training loss
         """
 
@@ -242,6 +243,10 @@ class TransformerModelWrapper:
 
         if use_logits:
             train_dataloader = unlabeled_dataloader
+
+        if min_steps > 0:
+            num_train_epochs = max(num_train_epochs,
+                                   min_steps / max(1, len(train_dataloader) // gradient_accumulation_steps))
 
         if max_steps > 0:
             t_total = max_steps

@@ -55,7 +55,8 @@ class TrainConfig(PetConfig):
     """Configuration for training a model."""
 
     def __init__(self, device: str = None, per_gpu_train_batch_size: int = 8, per_gpu_unlabeled_batch_size: int = 8,
-                 n_gpu: int = 1, num_train_epochs: int = 3, max_steps: int = -1, gradient_accumulation_steps: int = 1,
+                 n_gpu: int = 1, num_train_epochs: int = 3, max_steps: int = -1, min_steps: int = -1,
+                 gradient_accumulation_steps: int = 1,
                  weight_decay: float = 0.0, learning_rate: float = 5e-5, adam_epsilon: float = 1e-8,
                  warmup_steps: int = 0, max_grad_norm: float = 1, lm_training: bool = False, use_logits: bool = False,
                  alpha: float = 0.9999, temperature: float = 1):
@@ -85,6 +86,7 @@ class TrainConfig(PetConfig):
         self.n_gpu = n_gpu
         self.num_train_epochs = num_train_epochs
         self.max_steps = max_steps
+        self.min_steps = min_steps
         self.gradient_accumulation_steps = gradient_accumulation_steps
         self.weight_decay = weight_decay
         self.learning_rate = learning_rate
@@ -464,6 +466,7 @@ def train_single_model(model: TransformerModelWrapper, train_data: List[InputExa
             n_gpu=config.n_gpu,
             num_train_epochs=config.num_train_epochs,
             max_steps=config.max_steps,
+            min_steps=config.min_steps,
             gradient_accumulation_steps=config.gradient_accumulation_steps,
             weight_decay=config.weight_decay,
             learning_rate=config.learning_rate,

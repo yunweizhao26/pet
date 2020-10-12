@@ -57,6 +57,8 @@ parser.add_argument("--pet_num_train_epochs", default=3, type=float,
                     help="Total number of training epochs to perform in PET.")
 parser.add_argument("--pet_max_steps", default=-1, type=int,
                     help="If > 0: set total number of training steps to perform in PET. Override num_train_epochs.")
+parser.add_argument("--pet_min_steps", default=-1, type=int,
+                    help="If > 0: set minimal number of steps. Use with num_train_epochs.")
 
 # SequenceClassifier-specific optional parameters (also used for the final PET classifier)
 parser.add_argument("--sc_repetitions", default=1, type=int,
@@ -78,6 +80,8 @@ parser.add_argument("--sc_num_train_epochs", default=3, type=float,
 parser.add_argument("--sc_max_steps", default=-1, type=int,
                     help="If > 0: set total number of training steps to perform for sequence classifier training. "
                          "Override num_train_epochs.")
+parser.add_argument("--sc_min_steps", default=-1, type=int,
+                    help="If > 0: set minimal number of steps. Use with num_train_epochs.")
 
 # iPET-specific optional parameters
 parser.add_argument("--ipet_generations", default=3, type=int,
