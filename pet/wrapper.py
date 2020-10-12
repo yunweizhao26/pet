@@ -16,6 +16,7 @@ provides convenience methods for training and inference.
 """
 import json
 import os
+from math import floor
 from typing import List, Dict, Optional
 
 import jsonpickle
@@ -246,7 +247,7 @@ class TransformerModelWrapper:
 
         if min_steps > 0:
             num_train_epochs = max(num_train_epochs,
-                                   min_steps / max(1, len(train_dataloader) // gradient_accumulation_steps))
+                                   floor(min_steps / max(1, len(train_dataloader) / gradient_accumulation_steps)))
 
         if max_steps > 0:
             t_total = max_steps
