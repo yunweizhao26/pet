@@ -553,7 +553,7 @@ def _write_results(path: str, results: Dict) -> Dict:
     return final_results_dict
 
 
-def merge_logits(logits_dir: str, output_file: str, reduction: str):
+def merge_logits(logits_dir: str, output_file: str, reduction: str, eval_logits=False):
     """
     Merge the logits predicted for unlabeled examples by multiple models.
 
@@ -564,6 +564,7 @@ def merge_logits(logits_dir: str, output_file: str, reduction: str):
     :param reduction: the strategy for merging logits, either 'mean' or 'wmean'. For 'mean', all models contribute
            equally, for 'wmean', each model's contribution is proportional to its accuracy on the training set before
            training.
+    :param eval_logits: whether to merge ``eval_logits.txt`` rather than ``logits.txt``.
     """
     subdirs = next(os.walk(logits_dir))[1]
     logger.info("Found the following {} subdirectories: {}".format(len(subdirs), subdirs))
@@ -572,7 +573,10 @@ def merge_logits(logits_dir: str, output_file: str, reduction: str):
 
     for subdir in subdirs:
         results_file = os.path.join(logits_dir, subdir, 'results.txt')
-        logits_file = os.path.join(logits_dir, subdir, 'logits.txt')
+        if eval_logits:
+            logits_file = os.path.join(logits_dir, subdir, 'eval_logits.txt')
+        else:
+            logits_file = os.path.join(logits_dir, subdir, 'logits.txt')
         logits = []
 
         if not os.path.exists(results_file) or not os.path.exists(logits_file):

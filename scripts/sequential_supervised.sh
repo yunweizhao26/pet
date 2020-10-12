@@ -5,7 +5,7 @@ python3 cli.py \
 --model_type albert \
 --model_name_or_path albert-xxlarge-v2 \
 --task_name mnli \
---output_dir experiments/mnli/supervised \
+--output_dir experiments/mnli/albert/supervised \
 --do_train \
 --do_eval \
 --pet_per_gpu_eval_batch_size 4 \
