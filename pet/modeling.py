@@ -366,7 +366,7 @@ def train_pet_ensemble(model_config: WrapperConfig, train_config: TrainConfig, e
                 logger.warning(f"Path {pattern_iter_output_dir} already exists, skipping it...")
                 continue
 
-            if not os.path.exists(pattern_iter_output_dir):
+            if not os.path.exists(pattern_iter_output_dir) and local_rank in [-1, 0]:
                 os.makedirs(pattern_iter_output_dir)
 
             wrapper = init_model(model_config)
