@@ -17,10 +17,10 @@ python3 cli.py \
 --sc_per_gpu_train_batch_size 4 \
 --sc_per_gpu_unlabeled_batch_size 16 \
 --sc_gradient_accumulation_steps 4 \
---sc_num_train_epochs 5 \
+--sc_num_train_epochs 2 \
 --sc_min_steps 250 \
 --sc_max_seq_length 256 \
---sc_repetitions 1 \
---train_examples 5 10 20 50 100 200 500 1000 2000 5000 10000 20000 -1 \
+--sc_repetitions 3 \
+--train_examples 5 10 20 50 100 200 500 1000 2000 5000 10000 20000 \
 --overwrite_output_dir \
 --no_distillation

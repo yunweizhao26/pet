@@ -46,11 +46,13 @@ def load_pet_configs(args) -> Tuple[WrapperConfig, pet.TrainConfig, pet.EvalConf
                                 gradient_accumulation_steps=args.pet_gradient_accumulation_steps,
                                 weight_decay=args.weight_decay, learning_rate=args.learning_rate,
                                 adam_epsilon=args.adam_epsilon, warmup_steps=args.warmup_steps,
-                                max_grad_norm=args.max_grad_norm, lm_training=args.lm_training, alpha=args.alpha)
+                                max_grad_norm=args.max_grad_norm, lm_training=args.lm_training, alpha=args.alpha,
+                                local_rank=args.local_rank)
 
     eval_cfg = pet.EvalConfig(device=args.device, n_gpu=args.n_gpu, metrics=args.metrics,
                               per_gpu_eval_batch_size=args.pet_per_gpu_eval_batch_size,
-                              decoding_strategy=args.decoding_strategy, priming=args.priming)
+                              decoding_strategy=args.decoding_strategy, priming=args.priming,
+                              local_rank=args.local_rank)
 
     return model_cfg, train_cfg, eval_cfg
 
@@ -72,10 +74,12 @@ def load_sequence_classifier_configs(args) -> Tuple[WrapperConfig, pet.TrainConf
                                 gradient_accumulation_steps=args.sc_gradient_accumulation_steps,
                                 weight_decay=args.weight_decay, learning_rate=args.learning_rate,
                                 adam_epsilon=args.adam_epsilon, warmup_steps=args.warmup_steps,
-                                max_grad_norm=args.max_grad_norm, use_logits=args.method != 'sequence_classifier')
+                                max_grad_norm=args.max_grad_norm, use_logits=args.method != 'sequence_classifier',
+                                local_rank=args.local_rank)
 
     eval_cfg = pet.EvalConfig(device=args.device, n_gpu=args.n_gpu, metrics=args.metrics,
-                              per_gpu_eval_batch_size=args.sc_per_gpu_eval_batch_size)
+                              per_gpu_eval_batch_size=args.sc_per_gpu_eval_batch_size,
+                              local_rank=args.local_rank)
 
     return model_cfg, train_cfg, eval_cfg
 
@@ -94,8 +98,12 @@ def main():
     logger.info("Parameters: {}".format(args))
 
     # Setup CUDA, GPU & distributed training
-    args.device = "cuda" if torch.cuda.is_available() and not args.no_cuda else "cpu"
-    args.n_gpu = torch.cuda.device_count()
+    if args.local_rank != -1:
+        args.n_gpu = 1
+        args.device = args.local_rank if torch.cuda.is_available() and not args.no_cuda else "cpu"
+    else:
+        args.n_gpu = torch.cuda.device_count()
+        args.device = "cuda" if torch.cuda.is_available() and not args.no_cuda else "cpu"
 
     # Prepare task
     args.task_name = args.task_name.lower()
@@ -105,6 +113,9 @@ def main():
     args.label_list = processor.get_labels()
 
     wandb_initalized = False
+
+    if args.local_rank != -1:
+        torch.distributed.init_process_group("nccl", rank=args.local_rank)
 
     for n_train_examples in args.train_examples:
         train_ex_per_label, test_ex_per_label = None, None
@@ -139,7 +150,7 @@ def main():
                                           unlabeled_data=unlabeled_data,
                                           eval_data=eval_data, do_train=args.do_train, do_eval=args.do_eval,
                                           no_distillation=args.no_distillation, seed=args.seed,
-                                          overwrite_dir=args.overwrite_output_dir)
+                                          overwrite_dir=args.overwrite_output_dir, local_rank=args.local_rank)
 
         elif args.method == 'ipet':
             final_results = pet.train_ipet(pet_model_cfg, pet_train_cfg, pet_eval_cfg, ipet_cfg, sc_model_cfg,
@@ -152,7 +163,7 @@ def main():
                                            unlabeled_data=unlabeled_data,
                                            eval_data=eval_data, do_train=args.do_train, do_eval=args.do_eval,
                                            seed=args.seed,
-                                           overwrite_dir=args.overwrite_output_dir)
+                                           overwrite_dir=args.overwrite_output_dir, local_rank=args.local_rank)
 
         elif args.method == 'sequence_classifier':
             final_results = pet.train_classifier(sc_model_cfg, sc_train_cfg, sc_eval_cfg, output_dir=args.output_dir,
@@ -160,7 +171,7 @@ def main():
                                                  unlabeled_data=unlabeled_data,
                                                  eval_data=eval_data, do_train=args.do_train, do_eval=args.do_eval,
                                                  seed=args.seed,
-                                                 overwrite_dir=args.overwrite_output_dir)
+                                                 overwrite_dir=args.overwrite_output_dir, local_rank=args.local_rank)
 
         else:
             raise ValueError(f"Training method '{args.method}' not implemented")

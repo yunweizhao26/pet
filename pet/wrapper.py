@@ -23,7 +23,7 @@ import jsonpickle
 import numpy as np
 import torch
 import torch.nn as nn
-from torch.utils.data import RandomSampler, DataLoader, SequentialSampler
+from torch.utils.data import RandomSampler, DataLoader, SequentialSampler, DistributedSampler
 from tqdm import trange, tqdm
 from transformers import InputExample, AdamW, get_linear_schedule_with_warmup, PreTrainedTokenizer, BertForMaskedLM, \
     RobertaForMaskedLM, XLMRobertaForMaskedLM, XLNetConfig, XLNetForSequenceClassification, XLNetTokenizer, \
@@ -32,6 +32,7 @@ from transformers import InputExample, AdamW, get_linear_schedule_with_warmup, P
     XLMRobertaTokenizer, AlbertForSequenceClassification, AlbertForMaskedLM, AlbertTokenizer, AlbertConfig, \
     GPT2Config, GPT2LMHeadModel, GPT2Tokenizer
 from transformers import __version__ as transformers_version
+from transformers.trainer_utils import distributed_concat
 
 import log
 from pet import preprocessor
@@ -198,7 +199,7 @@ class TransformerModelWrapper:
               learning_rate: float = 5e-5, adam_epsilon: float = 1e-8, warmup_steps=0, max_grad_norm: float = 1,
               logging_steps: int = 50, per_gpu_unlabeled_batch_size: int = 8, unlabeled_data: List[InputExample] = None,
               lm_training: bool = False, use_logits: bool = False, alpha: float = 0.8, temperature: float = 1,
-              max_steps=-1, min_steps=-1, **_):
+              max_steps=-1, min_steps=-1, local_rank=-1, **_):
         """
         Train the underlying language model.
 
@@ -227,7 +228,10 @@ class TransformerModelWrapper:
 
         train_batch_size = per_gpu_train_batch_size * max(1, n_gpu)
         train_dataset = self._generate_dataset(task_train_data)
-        train_sampler = RandomSampler(train_dataset)
+        if local_rank != -1:
+            train_sampler = DistributedSampler(train_dataset)
+        else:
+            train_sampler = RandomSampler(train_dataset)
         train_dataloader = DataLoader(train_dataset, sampler=train_sampler, batch_size=train_batch_size)
 
         unlabeled_dataloader, unlabeled_iter = None, None
@@ -269,6 +273,8 @@ class TransformerModelWrapper:
                                                     num_training_steps=t_total)
 
         # multi-gpu training
+        if local_rank != -1:
+            self.model = torch.nn.parallel.DistributedDataParallel(self.model, device_ids=[local_rank])
         if n_gpu > 1:
             self.model = torch.nn.DataParallel(self.model)
 
@@ -342,7 +348,7 @@ class TransformerModelWrapper:
         return global_step, (tr_loss / global_step if global_step > 0 else -1)
 
     def eval(self, eval_data: List[InputExample], device, per_gpu_eval_batch_size: int = 8, n_gpu: int = 1,
-             priming: bool = False, decoding_strategy: str = 'default') -> Dict:
+             priming: bool = False, decoding_strategy: str = 'default', local_rank=-1) -> Dict:
         """
         Evaluate the underlying language model.
 
@@ -358,11 +364,16 @@ class TransformerModelWrapper:
 
         eval_dataset = self._generate_dataset(eval_data, priming=priming)
         eval_batch_size = per_gpu_eval_batch_size * max(1, n_gpu)
-        eval_sampler = SequentialSampler(eval_dataset)
+        if local_rank != -1:
+            eval_sampler = DistributedSampler(eval_dataset, shuffle=False)
+        else:
+            eval_sampler = RandomSampler(eval_dataset)
         eval_dataloader = DataLoader(eval_dataset, sampler=eval_sampler, batch_size=eval_batch_size)
 
         if n_gpu > 1:
             self.model = torch.nn.DataParallel(self.model)
+        if local_rank != -1:
+            self.model = torch.nn.parallel.DistributedDataParallel(self.model, device_ids=[local_rank])
 
         preds = None
         all_indices, out_label_ids, question_ids = None, None, None
@@ -383,17 +394,32 @@ class TransformerModelWrapper:
                     logits = EVALUATION_STEP_FUNCTIONS[self.config.wrapper_type](self)(batch)
 
             if preds is None:
-                preds = logits.detach().cpu().numpy()
-                out_label_ids = labels.detach().cpu().numpy()
-                all_indices = indices.detach().cpu().numpy()
+                preds = logits
+                out_label_ids = labels
+                all_indices = indices
                 if 'question_idx' in batch:
-                    question_ids = batch['question_idx'].detach().cpu().numpy()
+                    question_ids = batch['question_idx']
             else:
-                preds = np.append(preds, logits.detach().cpu().numpy(), axis=0)
-                out_label_ids = np.append(out_label_ids, labels.detach().cpu().numpy(), axis=0)
-                all_indices = np.append(all_indices, indices.detach().cpu().numpy(), axis=0)
+                preds = torch.cat((preds, logits), dim=0)
+                out_label_ids = torch.cat((out_label_ids, labels), dim=0)
+                all_indices = torch.cat((all_indices, indices), dim=0)
                 if 'question_idx' in batch:
-                    question_ids = np.append(question_ids, batch['question_idx'].detach().cpu().numpy(), axis=0)
+                    question_ids = torch.cat((question_ids, batch['question_idx']), dim=0)
+
+        if local_rank != -1:
+            preds = distributed_concat(preds, num_total_examples=len(eval_data)).detach().cpu().numpy()
+            out_label_ids = distributed_concat(out_label_ids, num_total_examples=len(eval_data)).detach().cpu().numpy()
+            all_indices = distributed_concat(all_indices, num_total_examples=len(eval_data)).detach().cpu().numpy()
+            if 'question_idx' in batch:
+                question_ids = distributed_concat(question_ids,
+                                                  num_total_examples=len(eval_data)).detach().cpu().numpy()
+        else:
+            preds = preds.detach().cpu().numpy()
+            out_label_ids = out_label_ids.detach().cpu().numpy()
+            all_indices = all_indices.detach().cpu().numpy()
+            if 'question_idx' in batch:
+                question_ids = question_ids.detach().cpu().numpy()
+
 
         return {
             'indices': all_indices,
