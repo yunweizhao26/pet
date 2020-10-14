@@ -176,7 +176,7 @@ def main():
         else:
             raise ValueError(f"Training method '{args.method}' not implemented")
 
-        if final_results is not None:
+        if final_results is not None and args.local_rank in [-1, 0]:
             if not wandb_initalized:
                 wandb.init(project="pvp-vs-finetuning")
                 wandb_initalized = True
