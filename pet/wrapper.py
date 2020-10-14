@@ -32,12 +32,11 @@ from transformers import InputExample, AdamW, get_linear_schedule_with_warmup, P
     XLMRobertaTokenizer, AlbertForSequenceClassification, AlbertForMaskedLM, AlbertTokenizer, AlbertConfig, \
     GPT2Config, GPT2LMHeadModel, GPT2Tokenizer
 from transformers import __version__ as transformers_version
-from transformers.trainer_utils import distributed_concat
 
 import log
 from pet import preprocessor
 from pet.tasks import TASK_HELPERS
-from pet.utils import InputFeatures, DictDataset, distillation_loss
+from pet.utils import InputFeatures, DictDataset, distillation_loss, distributed_concat
 
 logger = log.get_logger('root')
 
