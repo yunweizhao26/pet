@@ -343,19 +343,16 @@ def distillation_loss(predictions, targets, temperature):
 
 
 def distributed_concat(tensor: "torch.Tensor", num_total_examples: Optional[int] = None) -> "torch.Tensor":
-    if is_torch_available():
-        try:
-            if isinstance(tensor, (tuple, list)):
-                return type(tensor)(distributed_concat(t, num_total_examples) for t in tensor)
-            output_tensors = [tensor.clone() for _ in range(torch.distributed.get_world_size())]
-            torch.distributed.all_gather(output_tensors, tensor)
-            concat = torch.cat(output_tensors, dim=0)
+    try:
+        if isinstance(tensor, (tuple, list)):
+            return type(tensor)(distributed_concat(t, num_total_examples) for t in tensor)
+        output_tensors = [tensor.clone() for _ in range(torch.distributed.get_world_size())]
+        torch.distributed.all_gather(output_tensors, tensor)
+        concat = torch.cat(output_tensors, dim=0)
 
-            # truncate the dummy elements added by SequentialDistributedSampler
-            if num_total_examples is not None:
-                concat = concat[:num_total_examples]
-            return concat
-        except AssertionError:
-            raise AssertionError("Not currently using distributed training")
-    else:
-        raise ImportError("Torch must be installed to use `distributed_concat`")
+        # truncate the dummy elements added by SequentialDistributedSampler
+        if num_total_examples is not None:
+            concat = concat[:num_total_examples]
+        return concat
+    except AssertionError:
+        raise AssertionError("Not currently using distributed training")
