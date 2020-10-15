@@ -150,7 +150,8 @@ def main():
                                           unlabeled_data=unlabeled_data,
                                           eval_data=eval_data, do_train=args.do_train, do_eval=args.do_eval,
                                           no_distillation=args.no_distillation, seed=args.seed,
-                                          overwrite_dir=args.overwrite_output_dir, local_rank=args.local_rank)
+                                          overwrite_dir=args.overwrite_output_dir, save_model=args.save_model,
+                                          local_rank=args.local_rank)
 
         elif args.method == 'ipet':
             final_results = pet.train_ipet(pet_model_cfg, pet_train_cfg, pet_eval_cfg, ipet_cfg, sc_model_cfg,
@@ -163,7 +164,8 @@ def main():
                                            unlabeled_data=unlabeled_data,
                                            eval_data=eval_data, do_train=args.do_train, do_eval=args.do_eval,
                                            seed=args.seed,
-                                           overwrite_dir=args.overwrite_output_dir, local_rank=args.local_rank)
+                                           overwrite_dir=args.overwrite_output_dir, save_model=args.save_model,
+                                           local_rank=args.local_rank)
 
         elif args.method == 'sequence_classifier':
             final_results = pet.train_classifier(sc_model_cfg, sc_train_cfg, sc_eval_cfg, output_dir=args.output_dir,
@@ -171,7 +173,8 @@ def main():
                                                  unlabeled_data=unlabeled_data,
                                                  eval_data=eval_data, do_train=args.do_train, do_eval=args.do_eval,
                                                  seed=args.seed,
-                                                 overwrite_dir=args.overwrite_output_dir, local_rank=args.local_rank)
+                                                 overwrite_dir=args.overwrite_output_dir, save_model=args.save_model,
+                                                 local_rank=args.local_rank)
 
         else:
             raise ValueError(f"Training method '{args.method}' not implemented")

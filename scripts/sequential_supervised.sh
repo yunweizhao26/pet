@@ -1,4 +1,6 @@
-python3 cli.py \
+python -m torch.distributed.launch \
+--nproc_per_node 4 \
+cli.py \
 --method sequence_classifier \
 --pattern_ids 0 \
 --data_dir data/MNLI \
@@ -17,7 +19,7 @@ python3 cli.py \
 --sc_per_gpu_train_batch_size 4 \
 --sc_per_gpu_unlabeled_batch_size 16 \
 --sc_gradient_accumulation_steps 4 \
---sc_num_train_epochs 2 \
+--sc_num_train_epochs 5 \
 --sc_min_steps 250 \
 --sc_max_seq_length 256 \
 --sc_repetitions 3 \

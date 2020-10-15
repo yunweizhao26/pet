@@ -162,7 +162,7 @@ def train_ipet(ensemble_model_config: WrapperConfig, ensemble_train_config: Trai
                ensemble_repetitions: int = 3, final_repetitions: int = 1, reduction: str = 'wmean',
                train_data: List[InputExample] = None, unlabeled_data: List[InputExample] = None,
                eval_data: List[InputExample] = None, do_train: bool = True, do_eval: bool = True, seed: int = 42,
-               overwrite_dir: bool = False, local_rank=-1):
+               overwrite_dir: bool = False, save_model=False, local_rank=-1):
     """
     Train and evaluate a new iPET model for a given task.
 
@@ -194,7 +194,7 @@ def train_ipet(ensemble_model_config: WrapperConfig, ensemble_train_config: Trai
                            gen_output_dir, ipet_data_dir=ipet_data_dir,
                            repetitions=ensemble_repetitions, train_data=train_data, unlabeled_data=unlabeled_data,
                            eval_data=eval_data, do_train=do_train, do_eval=do_eval, save_unlabeled_logits=True,
-                           overwrite_dir=overwrite_dir, local_rank=local_rank)
+                           overwrite_dir=overwrite_dir, save_model=save_model, local_rank=local_rank)
 
         # Step 2: Use the model to annotate examples for the next generation
         original_data_size = len(train_data) if train_data else 10 / ipet_config.scale_factor
@@ -237,7 +237,7 @@ def train_pet(ensemble_model_config: WrapperConfig, ensemble_train_config: Train
               final_repetitions: int = 1, reduction: str = 'wmean', train_data: List[InputExample] = None,
               unlabeled_data: List[InputExample] = None, eval_data: List[InputExample] = None, do_train: bool = True,
               do_eval: bool = True, no_distillation: bool = False, seed: int = 42, overwrite_dir: bool = False,
-              local_rank=-1):
+              save_model=False, local_rank=-1):
     """
     Train and evaluate a new PET model for a given task.
 
@@ -268,7 +268,7 @@ def train_pet(ensemble_model_config: WrapperConfig, ensemble_train_config: Train
                                        unlabeled_data=unlabeled_data,
                                        eval_data=eval_data, do_train=do_train, do_eval=do_eval,
                                        save_unlabeled_logits=not no_distillation, seed=seed,
-                                       overwrite_dir=overwrite_dir, local_rank=local_rank)
+                                       overwrite_dir=overwrite_dir, save_model=save_model, local_rank=local_rank)
 
     if no_distillation:
         return final_results
@@ -296,7 +296,7 @@ def train_classifier(model_config: WrapperConfig, train_config: TrainConfig, eva
                      repetitions: int = 3, train_data: List[InputExample] = None,
                      unlabeled_data: List[InputExample] = None, eval_data: List[InputExample] = None,
                      do_train: bool = True, do_eval: bool = True, seed: int = 42, overwrite_dir: bool = False,
-                     local_rank=-1):
+                     save_model=False, local_rank=-1):
     """
     Train and evaluate a sequence classification model.
 
@@ -317,8 +317,8 @@ def train_classifier(model_config: WrapperConfig, train_config: TrainConfig, eva
                                        output_dir=output_dir,
                                        repetitions=repetitions,
                                        train_data=train_data, unlabeled_data=unlabeled_data, eval_data=eval_data,
-                                       do_train=do_train,
-                                       do_eval=do_eval, seed=seed, overwrite_dir=overwrite_dir, local_rank=local_rank)
+                                       do_train=do_train, do_eval=do_eval, seed=seed, overwrite_dir=overwrite_dir,
+                                       save_model=save_model, local_rank=local_rank)
 
     return final_results
 
@@ -329,7 +329,7 @@ def train_pet_ensemble(model_config: WrapperConfig, train_config: TrainConfig, e
                        train_data: List[InputExample] = None, unlabeled_data: List[InputExample] = None,
                        eval_data: List[InputExample] = None, do_train: bool = True, do_eval: bool = True,
                        save_unlabeled_logits: bool = False, seed: int = 42, overwrite_dir: bool = False,
-                       local_rank=-1):
+                       save_model=False, local_rank=-1):
     """
     Train and evaluate an ensemble of PET models without knowledge distillation.
 
@@ -391,7 +391,8 @@ def train_pet_ensemble(model_config: WrapperConfig, train_config: TrainConfig, e
 
                 if local_rank in [-1, 0]:
                     logger.info("Saving trained model at {}...".format(pattern_iter_output_dir))
-                    wrapper.save(pattern_iter_output_dir)
+                    if save_model:
+                        wrapper.save(pattern_iter_output_dir)
                     train_config.save(os.path.join(pattern_iter_output_dir, 'train_config.json'))
                     eval_config.save(os.path.join(pattern_iter_output_dir, 'eval_config.json'))
                     logger.info("Saving complete")
