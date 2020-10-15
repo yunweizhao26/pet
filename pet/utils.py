@@ -342,17 +342,22 @@ def distillation_loss(predictions, targets, temperature):
     return F.kl_div(p, q, reduction='sum') * (temperature ** 2) / predictions.shape[0]
 
 
-def distributed_concat(tensor: "torch.Tensor", num_total_examples: Optional[int] = None) -> "torch.Tensor":
+def distributed_concat(tensor: "torch.Tensor", num_total_examples: Optional[int] = None,
+                       interleave=False) -> "torch.Tensor":
     try:
         if isinstance(tensor, (tuple, list)):
             return type(tensor)(distributed_concat(t, num_total_examples) for t in tensor)
         output_tensors = [tensor.clone() for _ in range(torch.distributed.get_world_size())]
         torch.distributed.all_gather(output_tensors, tensor)
-        concat = torch.cat(output_tensors, dim=0)
+        if interleave:
+            combined = torch.stack(output_tensors)
+            combined = combined.transpose(0, 1).reshape(-1, combined.shape[-1])
+        else:
+            combined = torch.cat(output_tensors, dim=0)
 
         # truncate the dummy elements added by SequentialDistributedSampler
         if num_total_examples is not None:
-            concat = concat[:num_total_examples]
-        return concat
+            combined = combined[:num_total_examples]
+        return combined
     except AssertionError:
         raise AssertionError("Not currently using distributed training")

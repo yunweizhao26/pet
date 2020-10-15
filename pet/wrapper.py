@@ -406,19 +406,21 @@ class TransformerModelWrapper:
                     question_ids = torch.cat((question_ids, batch['question_idx']), dim=0)
 
         if local_rank != -1:
-            preds = distributed_concat(preds, num_total_examples=len(eval_data)).detach().cpu().numpy()
-            out_label_ids = distributed_concat(out_label_ids, num_total_examples=len(eval_data)).detach().cpu().numpy()
-            all_indices = distributed_concat(all_indices, num_total_examples=len(eval_data)).detach().cpu().numpy()
+            preds = distributed_concat(preds, num_total_examples=len(eval_data), interleave=True).detach().cpu().numpy()
+            out_label_ids = distributed_concat(out_label_ids, num_total_examples=len(eval_data),
+                                               interleave=True).detach().cpu().numpy()
+            all_indices = distributed_concat(all_indices, num_total_examples=len(eval_data),
+                                             interleave=True).detach().cpu().numpy()
             if 'question_idx' in batch:
                 question_ids = distributed_concat(question_ids,
-                                                  num_total_examples=len(eval_data)).detach().cpu().numpy()
+                                                  num_total_examples=len(eval_data),
+                                                  interleave=True).detach().cpu().numpy()
         else:
             preds = preds.detach().cpu().numpy()
             out_label_ids = out_label_ids.detach().cpu().numpy()
             all_indices = all_indices.detach().cpu().numpy()
             if 'question_idx' in batch:
                 question_ids = question_ids.detach().cpu().numpy()
-
 
         return {
             'indices': all_indices,
