@@ -351,7 +351,8 @@ def distributed_concat(tensor: "torch.Tensor", num_total_examples: Optional[int]
         torch.distributed.all_gather(output_tensors, tensor)
         if interleave:
             combined = torch.stack(output_tensors)
-            combined = combined.transpose(0, 1).reshape(-1, combined.shape[-1])
+            new_shape = [combined.shape[0] * combined.shape[1]] + list(combined.shape[2:])
+            combined = combined.transpose(0, 1).reshape(new_shape)
         else:
             combined = torch.cat(output_tensors, dim=0)
 
