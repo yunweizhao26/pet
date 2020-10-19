@@ -1,16 +1,16 @@
 0
 contradiction Tom
 entailment Sam
-neutral 
+neutral Clara
 1
-contradiction Yes
-entailment No
-neutral Maybe
+contradiction Tom
+entailment Sam
+neutral Clara
 2
-contradiction Right
-entailment Wrong
-neutral Maybe
+contradiction Tom
+entailment Sam
+neutral Clara
 3
-contradiction Yes
-entailment No
-neutral Maybe 
+contradiction Tom
+entailment Sam
+neutral Clara
