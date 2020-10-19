@@ -37,7 +37,7 @@ class PVP(ABC):
     custom implementation of a PVP.
     """
 
-    def __init__(self, wrapper, pattern_id: int = 0, verbalizer_file: str = None, seed: int = 42):
+    def __init__(self, wrapper, pattern_id: int = 0, verbalizer_file: str = None, reverse=False, seed: int = 42):
         """
         Create a new PVP.
 
@@ -49,6 +49,7 @@ class PVP(ABC):
         self.wrapper = wrapper
         self.pattern_id = pattern_id
         self.rng = random.Random(seed)
+        self.reverse = reverse
 
         if verbalizer_file:
             self.verbalize = PVP._load_verbalizer_from_file(verbalizer_file, self.pattern_id)
@@ -322,16 +323,22 @@ class YahooPVP(PVP):
 
 
 class MnliPVP(PVP):
-    VERBALIZER_A = {
-        "contradiction": ["Wrong"],
-        "entailment": ["Right"],
-        "neutral": ["Maybe"]
-    }
-    VERBALIZER_B = {
-        "contradiction": ["No"],
-        "entailment": ["Yes"],
-        "neutral": ["Maybe"]
-    }
+
+    def get_verbalizers(self):
+        if not self.reverse:
+            return [{"contradiction": ["Wrong"],
+                     "entailment": ["Right"],
+                     "neutral": ["Maybe"]},
+                    {"contradiction": ["No"],
+                     "entailment": ["Yes"],
+                     "neutral": ["Maybe"]}]
+        else:
+            return [{"contradiction": ["Right"],
+                     "entailment": ["Wrong"],
+                     "neutral": ["Maybe"]},
+                    {"contradiction": ["Yes"],
+                     "entailment": ["No"],
+                     "neutral": ["Maybe"]}]
 
     def get_parts(self, example: InputExample) -> FilledPattern:
         text_a = self.shortenable(self.remove_final_punc(example.text_a))
@@ -344,8 +351,8 @@ class MnliPVP(PVP):
 
     def verbalize(self, label) -> List[str]:
         if self.pattern_id == 0 or self.pattern_id == 1:
-            return MnliPVP.VERBALIZER_A[label]
-        return MnliPVP.VERBALIZER_B[label]
+            return self.get_verbalizers()[0][label]
+        return self.get_verbalizers()[1][label]
 
 
 class YelpPolarityPVP(PVP):

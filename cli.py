@@ -37,7 +37,7 @@ def load_pet_configs(args) -> Tuple[WrapperConfig, pet.TrainConfig, pet.EvalConf
     model_cfg = WrapperConfig(model_type=args.model_type, model_name_or_path=args.model_name_or_path,
                               wrapper_type=args.wrapper_type, task_name=args.task_name, label_list=args.label_list,
                               max_seq_length=args.pet_max_seq_length, verbalizer_file=args.verbalizer_file,
-                              cache_dir=args.cache_dir)
+                              reverse_pvp=args.reverse_pvp, cache_dir=args.cache_dir)
 
     train_cfg = pet.TrainConfig(device=args.device, per_gpu_train_batch_size=args.pet_per_gpu_train_batch_size,
                                 per_gpu_unlabeled_batch_size=args.pet_per_gpu_unlabeled_batch_size, n_gpu=args.n_gpu,
@@ -65,7 +65,8 @@ def load_sequence_classifier_configs(args) -> Tuple[WrapperConfig, pet.TrainConf
     model_cfg = WrapperConfig(model_type=args.model_type, model_name_or_path=args.model_name_or_path,
                               wrapper_type=SEQUENCE_CLASSIFIER_WRAPPER, task_name=args.task_name,
                               label_list=args.label_list, max_seq_length=args.sc_max_seq_length,
-                              verbalizer_file=args.verbalizer_file, cache_dir=args.cache_dir)
+                              verbalizer_file=args.verbalizer_file, reverse_pvp=args.reverse_pvp,
+                              cache_dir=args.cache_dir)
 
     train_cfg = pet.TrainConfig(device=args.device, per_gpu_train_batch_size=args.sc_per_gpu_train_batch_size,
                                 per_gpu_unlabeled_batch_size=args.sc_per_gpu_unlabeled_batch_size, n_gpu=args.n_gpu,

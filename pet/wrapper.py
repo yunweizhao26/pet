@@ -108,7 +108,8 @@ class WrapperConfig(object):
     """A configuration for a :class:`TransformerModelWrapper`."""
 
     def __init__(self, model_type: str, model_name_or_path: str, wrapper_type: str, task_name: str, max_seq_length: int,
-                 label_list: List[str], pattern_id: int = 0, verbalizer_file: str = None, cache_dir: str = None):
+                 label_list: List[str], pattern_id: int = 0, verbalizer_file: str = None, reverse_pvp: bool = False,
+                 cache_dir: str = None):
         """
         Create a new config.
 
@@ -130,6 +131,7 @@ class WrapperConfig(object):
         self.label_list = label_list
         self.pattern_id = pattern_id
         self.verbalizer_file = verbalizer_file
+        self.reverse_pvp = reverse_pvp
         self.cache_dir = cache_dir
         self.loggers_initialized = False
 
@@ -159,7 +161,8 @@ class TransformerModelWrapper:
                                                  cache_dir=config.cache_dir if config.cache_dir else None)
 
         self.preprocessor = PREPROCESSORS[self.config.wrapper_type](self, self.config.task_name, self.config.pattern_id,
-                                                                    self.config.verbalizer_file)
+                                                                    self.config.verbalizer_file,
+                                                                    self.config.reverse_pvp)
         self.task_helper = TASK_HELPERS[self.config.task_name](self) if self.config.task_name in TASK_HELPERS else None
 
     @classmethod
@@ -172,7 +175,8 @@ class TransformerModelWrapper:
         wrapper.model = model_class.from_pretrained(path)
         wrapper.tokenizer = tokenizer_class.from_pretrained(path)
         wrapper.preprocessor = PREPROCESSORS[wrapper.config.wrapper_type](
-            wrapper, wrapper.config.task_name, wrapper.config.pattern_id, wrapper.config.verbalizer_file)
+            wrapper, wrapper.config.task_name, wrapper.config.pattern_id, wrapper.config.verbalizer_file,
+            wrapper.config.reverse_pvp)
         wrapper.task_helper = TASK_HELPERS[wrapper.config.task_name](wrapper) \
             if wrapper.config.task_name in TASK_HELPERS else None
         return wrapper

@@ -36,6 +36,8 @@ parser.add_argument("--temperature", default=2, type=float,
                     help="Temperature used for combining PVPs (only for PET)")
 parser.add_argument("--verbalizer_file", default=None,
                     help="The path to a file to override default verbalizers (only for PET)")
+parser.add_argument("--reverse_pvp", action="store_true",
+                    help="Perform training with inverted verbalizers")
 parser.add_argument("--reduction", default='wmean', choices=['wmean', 'mean'],
                     help="Reduction strategy for merging predictions from multiple PET models. Select either "
                          "uniform weighting (mean) or weighting based on train set accuracy (wmean)")
