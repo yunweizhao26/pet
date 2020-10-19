@@ -1,0 +1,16 @@
+0
+contradiction Tom
+entailment Sam
+neutral 
+1
+contradiction Yes
+entailment No
+neutral Maybe
+2
+contradiction Right
+entailment Wrong
+neutral Maybe
+3
+contradiction Yes
+entailment No
+neutral Maybe 
