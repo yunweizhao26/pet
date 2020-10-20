@@ -1,11 +1,11 @@
 python3 cli.py \
   --method pet \
   --pattern_ids 0 \
-  --data_dir data/MNLI \
+  --data_dir data/ \
   --model_type roberta \
   --model_name_or_path roberta-large \
   --task_name mnli \
-  --output_dir experiments/mnli/sequential_pvps \
+  --output_dir experiments/[TASK_NAME]/roberta/supervised \
   --do_train \
   --do_eval \
   --pet_per_gpu_eval_batch_size 4 \
@@ -28,11 +28,11 @@ python3 cli.py \
 python3 cli.py \
   --method pet \
   --pattern_ids 1 \
-  --data_dir data/MNLI \
+  --data_dir data/ \
   --model_type roberta \
   --model_name_or_path roberta-large \
   --task_name mnli \
-  --output_dir experiments/mnli/sequential_pvps \
+  --output_dir experiments/[TASK_NAME]/roberta/supervised \
   --do_train \
   --do_eval \
   --pet_per_gpu_eval_batch_size 4 \
@@ -55,11 +55,11 @@ python3 cli.py \
 python3 cli.py \
   --method pet \
   --pattern_ids 2 \
-  --data_dir data/MNLI \
+  --data_dir data/ \
   --model_type roberta \
   --model_name_or_path roberta-large \
   --task_name mnli \
-  --output_dir experiments/mnli/sequential_pvps \
+  --output_dir experiments/[TASK_NAME]/roberta/supervised \
   --do_train \
   --do_eval \
   --pet_per_gpu_eval_batch_size 4 \
@@ -82,11 +82,11 @@ python3 cli.py \
 python3 cli.py \
   --method pet \
   --pattern_ids 3 \
-  --data_dir data/MNLI \
+  --data_dir data/ \
   --model_type roberta \
   --model_name_or_path roberta-large \
   --task_name mnli \
-  --output_dir experiments/mnli/sequential_pvps \
+  --output_dir experiments/[TASK_NAME]/roberta/supervised \
   --do_train \
   --do_eval \
   --pet_per_gpu_eval_batch_size 4 \

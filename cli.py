@@ -14,8 +14,9 @@
 This script can be used to train and evaluate either a regular supervised model or a PET/iPET model on
 one of the supported tasks and datasets.
 """
-
+import os
 from typing import Tuple
+import warnings
 
 import torch
 import wandb
@@ -127,12 +128,19 @@ def main():
 
         eval_set = TEST_SET if args.eval_set == 'test' else DEV_SET
 
+        data_dir = os.path.join(args.data_dir, args.task_name)
+        output_dir = args.output_dir.replace("[TASK_NAME]", args.task_name)
+
         train_data = load_examples(
-            args.task_name, args.data_dir, TRAIN_SET, num_examples=train_ex, num_examples_per_label=train_ex_per_label)
+            args.task_name, data_dir, TRAIN_SET, num_examples=train_ex, num_examples_per_label=train_ex_per_label)
         eval_data = load_examples(
-            args.task_name, args.data_dir, eval_set, num_examples=test_ex, num_examples_per_label=test_ex_per_label)
-        unlabeled_data = load_examples(
-            args.task_name, args.data_dir, UNLABELED_SET, num_examples=args.unlabeled_examples)
+            args.task_name, data_dir, eval_set, num_examples=test_ex, num_examples_per_label=test_ex_per_label)
+        try:
+            unlabeled_data = load_examples(
+                args.task_name, data_dir, UNLABELED_SET, num_examples=args.unlabeled_examples)
+        except FileNotFoundError:
+            warnings.warn("Unlabeled data not found.")
+            unlabeled_data = None
 
         args.metrics = METRICS.get(args.task_name, DEFAULT_METRICS)
 
@@ -143,7 +151,7 @@ def main():
         if args.method == 'pet':
             final_results = pet.train_pet(pet_model_cfg, pet_train_cfg, pet_eval_cfg, sc_model_cfg, sc_train_cfg,
                                           sc_eval_cfg,
-                                          pattern_ids=args.pattern_ids, output_dir=args.output_dir,
+                                          pattern_ids=args.pattern_ids, output_dir=output_dir,
                                           ensemble_repetitions=args.pet_repetitions,
                                           final_repetitions=args.sc_repetitions,
                                           reduction=args.reduction, train_data=train_data,
@@ -157,7 +165,7 @@ def main():
             final_results = pet.train_ipet(pet_model_cfg, pet_train_cfg, pet_eval_cfg, ipet_cfg, sc_model_cfg,
                                            sc_train_cfg,
                                            sc_eval_cfg,
-                                           pattern_ids=args.pattern_ids, output_dir=args.output_dir,
+                                           pattern_ids=args.pattern_ids, output_dir=output_dir,
                                            ensemble_repetitions=args.pet_repetitions,
                                            final_repetitions=args.sc_repetitions,
                                            reduction=args.reduction, train_data=train_data,
@@ -168,7 +176,7 @@ def main():
                                            local_rank=args.local_rank)
 
         elif args.method == 'sequence_classifier':
-            final_results = pet.train_classifier(sc_model_cfg, sc_train_cfg, sc_eval_cfg, output_dir=args.output_dir,
+            final_results = pet.train_classifier(sc_model_cfg, sc_train_cfg, sc_eval_cfg, output_dir=output_dir,
                                                  repetitions=args.sc_repetitions, train_data=train_data,
                                                  unlabeled_data=unlabeled_data,
                                                  eval_data=eval_data, do_train=args.do_train, do_eval=args.do_eval,
@@ -181,7 +189,7 @@ def main():
 
         if final_results is not None and args.local_rank in [-1, 0]:
             if not wandb_initalized:
-                wandb.init(project="pvp-vs-finetuning")
+                wandb.init(project=f"pvp-vs-finetuning-{args.task_name}")
                 wandb_initalized = True
             final_results["training_points"] = n_train_examples
             wandb.log(final_results)

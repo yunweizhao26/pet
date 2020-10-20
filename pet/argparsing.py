@@ -17,9 +17,10 @@ parser.add_argument("--model_name_or_path", default=None, type=str, required=Tru
 parser.add_argument("--task_name", default=None, type=str, required=True, choices=PROCESSORS.keys(),
                     help="The name of the task to train/evaluate on")
 parser.add_argument("--output_dir", default=None, type=str, required=True,
-                    help="The output directory where the model predictions and checkpoints will be written")
+                    help="The output directory where the model predictions and checkpoints will be written. [TASK_NAME]"
+                         " will be replaced by the task name.")
 parser.add_argument("--save_model", action="store_true",
-                    help="The output directory where the model predictions and checkpoints will be written")
+                    help="Whether to save model binaries. Keep disa bled to save space.")
 parser.add_argument("--local_rank", default=-1, type=int)
 
 # PET-specific optional parameters

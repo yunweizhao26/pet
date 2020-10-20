@@ -1,11 +1,11 @@
 python3 cli.py \
 --method sequence_classifier \
 --pattern_ids 0 \
---data_dir data/MNLI \
+--data_dir data/ \
 --model_type roberta \
---model_name_or_path roberta-base \
+--model_name_or_path roberta-large \
 --task_name mnli \
---output_dir experiments/mnli/supervised_base \
+--output_dir experiments/[TASK_NAME]/roberta/supervised \
 --do_train \
 --do_eval \
 --pet_per_gpu_eval_batch_size 2 \
