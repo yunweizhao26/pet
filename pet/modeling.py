@@ -569,6 +569,8 @@ def train_pet_ensemble(
                 wrapper = TransformerModelWrapper.from_pretrained(pattern_iter_output_dir)
 
                 for split, eval_data in {"dev": dev_data, "test": test_data}.items():
+                    if eval_data is None:
+                        continue
                     eval_result = evaluate(
                         wrapper, eval_data, eval_config, priming_data=train_data, local_rank=local_rank
                     )

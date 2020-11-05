@@ -5,7 +5,7 @@ python3 cli.py \
 --model_type roberta \
 --model_name_or_path roberta-large \
 --task_name mnli \
---output_dir experiments/[TASK_NAME]/roberta/supervised \
+--output_dir experiments//roberta/supervised \
 --do_train \
 --do_eval \
 --pet_per_gpu_eval_batch_size 2 \
