@@ -346,7 +346,7 @@ class TransformerModelWrapper:
 
         global_step = 0
         tr_loss, logging_loss = 0.0, 0.0
-        best_score = 0
+        best_score = -1
         self.model.zero_grad()
 
         train_iterator = trange(int(num_train_epochs), desc="Epoch")
