@@ -14,6 +14,7 @@ import json
 import os
 import random
 import statistics
+import warnings
 from abc import ABC
 from collections import defaultdict
 from copy import deepcopy
@@ -566,7 +567,11 @@ def train_pet_ensemble(
             # Evaluation
             if do_eval:
                 logger.info("Starting evaluation...")
-                wrapper = TransformerModelWrapper.from_pretrained(pattern_iter_output_dir)
+                try:
+                    wrapper = TransformerModelWrapper.from_pretrained(pattern_iter_output_dir)
+                except OSError:
+                    warnings.warn("No model found saved, proceeding with current model instead of best")
+                    pass
 
                 for split, eval_data in {"dev": dev_data, "test": test_data}.items():
                     if eval_data is None:
