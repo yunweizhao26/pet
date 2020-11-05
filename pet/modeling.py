@@ -596,19 +596,20 @@ def train_pet_ensemble(
                 wrapper = None
                 torch.cuda.empty_cache()
 
-            if do_train and not save_model:
-                outputs = os.listdir(pattern_iter_output_dir)
-                for item in outputs:
-                    if item.endswith(".bin"):
-                        os.remove(os.path.join(pattern_iter_output_dir, item))
-
     if do_eval:
         logger.info("=== OVERALL RESULTS ===")
         results_to_log = _write_results(os.path.join(output_dir, "result_test.txt"), results)
-        return results_to_log
     else:
         logger.info("=== ENSEMBLE TRAINING COMPLETE ===")
-        return
+        results_to_log = None
+
+    if do_train and not save_model:
+        outputs = os.listdir(pattern_iter_output_dir)
+        for item in outputs:
+            if item.endswith(".bin"):
+                os.remove(os.path.join(pattern_iter_output_dir, item))
+
+    return results_to_log
 
 
 def train_single_model(
