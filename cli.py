@@ -183,7 +183,7 @@ def main():
                 test_data = load_examples(
                     args.task_name, data_dir, TEST_SET, num_examples=test_ex, num_examples_per_label=test_ex_per_label
                 )
-            except FileNotFoundError:
+            except (FileNotFoundError, NotImplementedError):
                 test_data = None
                 warnings.warn("Test data not found.")
         else:
