@@ -97,7 +97,7 @@ class MyTaskDataProcessor(DataProcessor):
         examples = []
 
         with open(path) as f:
-            reader = csv.reader(f, delimiter=',')
+            reader = csv.reader(f, delimiter=",")
             for idx, row in enumerate(reader):
                 guid = "%s-%s" % (set_type, idx)
                 label = row[MyTaskDataProcessor.LABEL_COLUMN]

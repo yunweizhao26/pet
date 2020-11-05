@@ -771,7 +771,7 @@ def _write_results(path: str, results: Dict) -> Dict:
     with open(path, "w") as fh:
         for split, split_results in results.items():
             for metric in split_results.keys():
-                for pattern_id, values in results[metric].items():
+                for pattern_id, values in split_results[metric].items():
                     mean = statistics.mean(values)
                     stdev = statistics.stdev(values) if len(values) > 1 else 0
                     result_str = "{}_{}-{}: {} +- {}".format(split, metric, pattern_name(pattern_id), mean, stdev)
@@ -780,7 +780,9 @@ def _write_results(path: str, results: Dict) -> Dict:
                     final_results_dict[f"{metric}-{pattern_name(pattern_id)}"] = mean
 
             for metric in split_results.keys():
-                all_results = [result for pattern_results in results[metric].values() for result in pattern_results]
+                all_results = [
+                    result for pattern_results in split_results[metric].values() for result in pattern_results
+                ]
                 all_mean = statistics.mean(all_results)
                 all_stdev = statistics.stdev(all_results) if len(all_results) > 1 else 0
                 result_str = "{}_{}-all-p: {} +- {}".format(split, metric, all_mean, all_stdev)
