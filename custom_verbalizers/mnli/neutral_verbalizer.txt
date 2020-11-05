@@ -1,0 +1,16 @@
+0
+contradiction Tom
+entailment Sam
+neutral Clara
+1
+contradiction Tom
+entailment Sam
+neutral Clara
+2
+contradiction Tom
+entailment Sam
+neutral Clara
+3
+contradiction Tom
+entailment Sam
+neutral Clara

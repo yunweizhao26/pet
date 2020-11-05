@@ -23,24 +23,49 @@ import jsonpickle
 import numpy as np
 import torch
 import torch.nn as nn
-from torch.utils.data import RandomSampler, DataLoader, SequentialSampler, DistributedSampler
+from sklearn.metrics import f1_score
+from torch.utils.data import RandomSampler, DataLoader, DistributedSampler
 from tqdm import trange, tqdm
-from transformers import InputExample, AdamW, get_linear_schedule_with_warmup, PreTrainedTokenizer, BertForMaskedLM, \
-    RobertaForMaskedLM, XLMRobertaForMaskedLM, XLNetConfig, XLNetForSequenceClassification, XLNetTokenizer, \
-    XLNetLMHeadModel, BertConfig, BertForSequenceClassification, BertTokenizer, RobertaConfig, \
-    RobertaForSequenceClassification, RobertaTokenizer, XLMRobertaConfig, XLMRobertaForSequenceClassification, \
-    XLMRobertaTokenizer, AlbertForSequenceClassification, AlbertForMaskedLM, AlbertTokenizer, AlbertConfig, \
-    GPT2Config, GPT2LMHeadModel, GPT2Tokenizer
+from transformers import (
+    InputExample,
+    AdamW,
+    get_linear_schedule_with_warmup,
+    PreTrainedTokenizer,
+    BertForMaskedLM,
+    RobertaForMaskedLM,
+    XLMRobertaForMaskedLM,
+    XLNetConfig,
+    XLNetForSequenceClassification,
+    XLNetTokenizer,
+    XLNetLMHeadModel,
+    BertConfig,
+    BertForSequenceClassification,
+    BertTokenizer,
+    RobertaConfig,
+    RobertaForSequenceClassification,
+    RobertaTokenizer,
+    XLMRobertaConfig,
+    XLMRobertaForSequenceClassification,
+    XLMRobertaTokenizer,
+    AlbertForSequenceClassification,
+    AlbertForMaskedLM,
+    AlbertTokenizer,
+    AlbertConfig,
+    GPT2Config,
+    GPT2LMHeadModel,
+    GPT2Tokenizer,
+)
 from transformers import __version__ as transformers_version
+from transformers.data.metrics import simple_accuracy
 
 import log
 from pet import preprocessor
 from pet.tasks import TASK_HELPERS
-from pet.utils import InputFeatures, DictDataset, distillation_loss, distributed_concat
+from pet.utils import InputFeatures, DictDataset, distillation_loss, distributed_concat, exact_match
 
-logger = log.get_logger('root')
+logger = log.get_logger("root")
 
-CONFIG_NAME = 'wrapper_config.json'
+CONFIG_NAME = "wrapper_config.json"
 SEQUENCE_CLASSIFIER_WRAPPER = "sequence_classifier"
 MLM_WRAPPER = "mlm"
 PLM_WRAPPER = "plm"
@@ -54,41 +79,37 @@ PREPROCESSORS = {
 }
 
 MODEL_CLASSES = {
-    'bert': {
-        'config': BertConfig,
-        'tokenizer': BertTokenizer,
+    "bert": {
+        "config": BertConfig,
+        "tokenizer": BertTokenizer,
         SEQUENCE_CLASSIFIER_WRAPPER: BertForSequenceClassification,
-        MLM_WRAPPER: BertForMaskedLM
+        MLM_WRAPPER: BertForMaskedLM,
     },
-    'roberta': {
-        'config': RobertaConfig,
-        'tokenizer': RobertaTokenizer,
+    "roberta": {
+        "config": RobertaConfig,
+        "tokenizer": RobertaTokenizer,
         SEQUENCE_CLASSIFIER_WRAPPER: RobertaForSequenceClassification,
-        MLM_WRAPPER: RobertaForMaskedLM
+        MLM_WRAPPER: RobertaForMaskedLM,
     },
-    'xlm-roberta': {
-        'config': XLMRobertaConfig,
-        'tokenizer': XLMRobertaTokenizer,
+    "xlm-roberta": {
+        "config": XLMRobertaConfig,
+        "tokenizer": XLMRobertaTokenizer,
         SEQUENCE_CLASSIFIER_WRAPPER: XLMRobertaForSequenceClassification,
-        MLM_WRAPPER: XLMRobertaForMaskedLM
+        MLM_WRAPPER: XLMRobertaForMaskedLM,
     },
-    'xlnet': {
-        'config': XLNetConfig,
-        'tokenizer': XLNetTokenizer,
+    "xlnet": {
+        "config": XLNetConfig,
+        "tokenizer": XLNetTokenizer,
         SEQUENCE_CLASSIFIER_WRAPPER: XLNetForSequenceClassification,
-        PLM_WRAPPER: XLNetLMHeadModel
+        PLM_WRAPPER: XLNetLMHeadModel,
     },
-    'albert': {
-        'config': AlbertConfig,
-        'tokenizer': AlbertTokenizer,
+    "albert": {
+        "config": AlbertConfig,
+        "tokenizer": AlbertTokenizer,
         SEQUENCE_CLASSIFIER_WRAPPER: AlbertForSequenceClassification,
-        MLM_WRAPPER: AlbertForMaskedLM
+        MLM_WRAPPER: AlbertForMaskedLM,
     },
-    'gpt2': {
-        'config': GPT2Config,
-        'tokenizer': GPT2Tokenizer,
-        MLM_WRAPPER: GPT2LMHeadModel
-    },
+    "gpt2": {"config": GPT2Config, "tokenizer": GPT2Tokenizer, MLM_WRAPPER: GPT2LMHeadModel},
 }
 
 EVALUATION_STEP_FUNCTIONS = {
@@ -107,8 +128,18 @@ TRAIN_STEP_FUNCTIONS = {
 class WrapperConfig(object):
     """A configuration for a :class:`TransformerModelWrapper`."""
 
-    def __init__(self, model_type: str, model_name_or_path: str, wrapper_type: str, task_name: str, max_seq_length: int,
-                 label_list: List[str], pattern_id: int = 0, verbalizer_file: str = None, cache_dir: str = None):
+    def __init__(
+        self,
+        model_type: str,
+        model_name_or_path: str,
+        wrapper_type: str,
+        task_name: str,
+        max_seq_length: int,
+        label_list: List[str],
+        pattern_id: int = 0,
+        verbalizer_file: str = None,
+        cache_dir: str = None,
+    ):
         """
         Create a new config.
 
@@ -140,65 +171,94 @@ class TransformerModelWrapper:
     def __init__(self, config: WrapperConfig):
         """Create a new wrapper from the given config."""
         self.config = config
-        config_class = MODEL_CLASSES[self.config.model_type]['config']
-        tokenizer_class = MODEL_CLASSES[self.config.model_type]['tokenizer']
+        config_class = MODEL_CLASSES[self.config.model_type]["config"]
+        tokenizer_class = MODEL_CLASSES[self.config.model_type]["tokenizer"]
         model_class = MODEL_CLASSES[self.config.model_type][self.config.wrapper_type]
 
         model_config = config_class.from_pretrained(
-            config.model_name_or_path, num_labels=len(config.label_list), finetuning_task=config.task_name,
-            cache_dir=config.cache_dir if config.cache_dir else None, use_cache=False)
+            config.model_name_or_path,
+            num_labels=len(config.label_list),
+            finetuning_task=config.task_name,
+            cache_dir=config.cache_dir if config.cache_dir else None,
+            use_cache=False,
+        )
 
         self.tokenizer = tokenizer_class.from_pretrained(
-            config.model_name_or_path,
-            cache_dir=config.cache_dir if config.cache_dir else None)  # type: PreTrainedTokenizer
+            config.model_name_or_path, cache_dir=config.cache_dir if config.cache_dir else None
+        )  # type: PreTrainedTokenizer
 
-        if self.config.model_type == 'gpt2':
+        if self.config.model_type == "gpt2":
             self.tokenizer.pad_token, self.tokenizer.mask_token = self.tokenizer.eos_token, self.tokenizer.eos_token
 
-        self.model = model_class.from_pretrained(config.model_name_or_path, config=model_config,
-                                                 cache_dir=config.cache_dir if config.cache_dir else None)
+        self.model = model_class.from_pretrained(
+            config.model_name_or_path, config=model_config, cache_dir=config.cache_dir if config.cache_dir else None
+        )
 
-        self.preprocessor = PREPROCESSORS[self.config.wrapper_type](self, self.config.task_name, self.config.pattern_id,
-                                                                    self.config.verbalizer_file)
+        self.preprocessor = PREPROCESSORS[self.config.wrapper_type](
+            self, self.config.task_name, self.config.pattern_id, self.config.verbalizer_file
+        )
         self.task_helper = TASK_HELPERS[self.config.task_name](self) if self.config.task_name in TASK_HELPERS else None
 
     @classmethod
-    def from_pretrained(cls, path: str) -> 'TransformerModelWrapper':
+    def from_pretrained(cls, path: str) -> "TransformerModelWrapper":
         """Load a pretrained wrapper from a given path."""
         wrapper = TransformerModelWrapper.__new__(TransformerModelWrapper)
         wrapper.config = wrapper._load_config(path)
-        tokenizer_class = MODEL_CLASSES[wrapper.config.model_type]['tokenizer']
+        tokenizer_class = MODEL_CLASSES[wrapper.config.model_type]["tokenizer"]
         model_class = MODEL_CLASSES[wrapper.config.model_type][wrapper.config.wrapper_type]
         wrapper.model = model_class.from_pretrained(path)
         wrapper.tokenizer = tokenizer_class.from_pretrained(path)
         wrapper.preprocessor = PREPROCESSORS[wrapper.config.wrapper_type](
-            wrapper, wrapper.config.task_name, wrapper.config.pattern_id, wrapper.config.verbalizer_file)
-        wrapper.task_helper = TASK_HELPERS[wrapper.config.task_name](wrapper) \
-            if wrapper.config.task_name in TASK_HELPERS else None
+            wrapper, wrapper.config.task_name, wrapper.config.pattern_id, wrapper.config.verbalizer_file
+        )
+        wrapper.task_helper = (
+            TASK_HELPERS[wrapper.config.task_name](wrapper) if wrapper.config.task_name in TASK_HELPERS else None
+        )
         return wrapper
 
     def save(self, path: str) -> None:
         """Save a pretrained wrapper."""
-        model_to_save = self.model.module if hasattr(self.model, 'module') else self.model
+        model_to_save = self.model.module if hasattr(self.model, "module") else self.model
         model_to_save.save_pretrained(path)
         self.tokenizer.save_pretrained(path)
         self._save_config(path)
 
     def _save_config(self, path: str) -> None:
-        with open(os.path.join(path, CONFIG_NAME), 'w') as f:
+        with open(os.path.join(path, CONFIG_NAME), "w") as f:
             f.write(jsonpickle.encode(self.config))
 
     @staticmethod
     def _load_config(path: str) -> WrapperConfig:
-        with open(os.path.join(path, CONFIG_NAME), 'r') as f:
+        with open(os.path.join(path, CONFIG_NAME), "r") as f:
             return jsonpickle.decode(f.read())
 
-    def train(self, task_train_data: List[InputExample], device, per_gpu_train_batch_size: int = 8, n_gpu: int = 1,
-              num_train_epochs: int = 3, gradient_accumulation_steps: int = 1, weight_decay: float = 0.0,
-              learning_rate: float = 5e-5, adam_epsilon: float = 1e-8, warmup_steps=0, max_grad_norm: float = 1,
-              logging_steps: int = 50, per_gpu_unlabeled_batch_size: int = 8, unlabeled_data: List[InputExample] = None,
-              lm_training: bool = False, use_logits: bool = False, alpha: float = 0.8, temperature: float = 1,
-              max_steps=-1, min_steps=-1, local_rank=-1, **_):
+    def train(
+        self,
+        task_train_data: List[InputExample],
+        device,
+        per_gpu_train_batch_size: int = 8,
+        n_gpu: int = 1,
+        num_train_epochs: int = 3,
+        gradient_accumulation_steps: int = 1,
+        weight_decay: float = 0.0,
+        learning_rate: float = 5e-5,
+        adam_epsilon: float = 1e-8,
+        warmup_steps=0,
+        max_grad_norm: float = 1,
+        logging_steps: int = 50,
+        per_gpu_unlabeled_batch_size: int = 8,
+        unlabeled_data: List[InputExample] = None,
+        lm_training: bool = False,
+        use_logits: bool = False,
+        alpha: float = 0.8,
+        temperature: float = 1,
+        max_steps=-1,
+        min_steps=-1,
+        output_dir=None,
+        eval_kwargs=None,
+        local_rank=-1,
+        **_
+    ):
         """
         Train the underlying language model.
 
@@ -241,16 +301,18 @@ class TransformerModelWrapper:
             unlabeled_batch_size = per_gpu_unlabeled_batch_size * max(1, n_gpu)
             unlabeled_dataset = self._generate_dataset(unlabeled_data, labelled=False)
             unlabeled_sampler = RandomSampler(unlabeled_dataset)
-            unlabeled_dataloader = DataLoader(unlabeled_dataset, sampler=unlabeled_sampler,
-                                              batch_size=unlabeled_batch_size)
+            unlabeled_dataloader = DataLoader(
+                unlabeled_dataset, sampler=unlabeled_sampler, batch_size=unlabeled_batch_size
+            )
             unlabeled_iter = unlabeled_dataloader.__iter__()
 
         if use_logits:
             train_dataloader = unlabeled_dataloader
 
         if min_steps > 0:
-            num_train_epochs = max(num_train_epochs,
-                                   floor(min_steps / max(1, len(train_dataloader) / gradient_accumulation_steps)))
+            num_train_epochs = max(
+                num_train_epochs, floor(min_steps / max(1, len(train_dataloader) / gradient_accumulation_steps))
+            )
 
         if max_steps > 0:
             t_total = max_steps
@@ -259,17 +321,22 @@ class TransformerModelWrapper:
             t_total = len(train_dataloader) // gradient_accumulation_steps * num_train_epochs
 
         # Prepare optimizer and schedule (linear warmup and decay)
-        no_decay = ['bias', 'LayerNorm.weight']
+        no_decay = ["bias", "LayerNorm.weight"]
         optimizer_grouped_parameters = [
-            {'params': [p for n, p in self.model.named_parameters() if not any(nd in n for nd in no_decay)],
-             'weight_decay': weight_decay},
-            {'params': [p for n, p in self.model.named_parameters() if any(nd in n for nd in no_decay)],
-             'weight_decay': 0.0}
+            {
+                "params": [p for n, p in self.model.named_parameters() if not any(nd in n for nd in no_decay)],
+                "weight_decay": weight_decay,
+            },
+            {
+                "params": [p for n, p in self.model.named_parameters() if any(nd in n for nd in no_decay)],
+                "weight_decay": 0.0,
+            },
         ]
 
         optimizer = AdamW(optimizer_grouped_parameters, lr=learning_rate, eps=adam_epsilon)
-        scheduler = get_linear_schedule_with_warmup(optimizer, num_warmup_steps=warmup_steps,
-                                                    num_training_steps=t_total)
+        scheduler = get_linear_schedule_with_warmup(
+            optimizer, num_warmup_steps=warmup_steps, num_training_steps=t_total
+        )
 
         # multi-gpu training
         if local_rank != -1:
@@ -279,6 +346,7 @@ class TransformerModelWrapper:
 
         global_step = 0
         tr_loss, logging_loss = 0.0, 0.0
+        best_score = 0
         self.model.zero_grad()
 
         train_iterator = trange(int(num_train_epochs), desc="Epoch")
@@ -299,13 +367,16 @@ class TransformerModelWrapper:
                             logger.info("Resetting unlabeled dataset")
                             unlabeled_iter = unlabeled_dataloader.__iter__()
 
-                    lm_input_ids = unlabeled_batch['input_ids']
-                    unlabeled_batch['input_ids'], unlabeled_batch['mlm_labels'] = self._mask_tokens(lm_input_ids)
+                    lm_input_ids = unlabeled_batch["input_ids"]
+                    unlabeled_batch["input_ids"], unlabeled_batch["mlm_labels"] = self._mask_tokens(lm_input_ids)
                     unlabeled_batch = {k: t.to(device) for k, t in unlabeled_batch.items()}
 
                 train_step_inputs = {
-                    'unlabeled_batch': unlabeled_batch, 'lm_training': lm_training, 'alpha': alpha,
-                    'use_logits': use_logits, 'temperature': temperature
+                    "unlabeled_batch": unlabeled_batch,
+                    "lm_training": lm_training,
+                    "alpha": alpha,
+                    "use_logits": use_logits,
+                    "temperature": temperature,
                 }
                 loss = self.task_helper.train_step(batch, **train_step_inputs) if self.task_helper else None
 
@@ -331,11 +402,32 @@ class TransformerModelWrapper:
                         logs = {}
                         loss_scalar = (tr_loss - logging_loss) / logging_steps
                         learning_rate_scalar = scheduler.get_lr()[0]
-                        logs['learning_rate'] = learning_rate_scalar
-                        logs['loss'] = loss_scalar
+                        logs["learning_rate"] = learning_rate_scalar
+                        logs["loss"] = loss_scalar
                         logging_loss = tr_loss
 
-                        print(json.dumps({**logs, **{'step': global_step}}))
+                        if eval_kwargs is not None:
+                            eval_results = self.eval(**eval_kwargs)
+                            predictions = np.argmax(eval_results["logits"], axis=1)
+
+                            if eval_kwargs["config"].metrics:
+                                if "f1" in eval_kwargs["config"].metrics:
+                                    score = f1_score(eval_results["labels"], predictions)
+                                elif "f1-macro" in eval_kwargs["config"].metrics:
+                                    score = f1_score(eval_results["labels"], predictions, average="macro")
+                                elif "em" in eval_kwargs["config"].metrics:
+                                    score = exact_match(
+                                        predictions, eval_results["labels"], eval_results["question_ids"]
+                                    )
+                                elif "acc" in eval_kwargs["config"].metrics:
+                                    score = f1_score(eval_results["labels"], predictions, average="macro")
+                            else:
+                                score = simple_accuracy(predictions, eval_results["labels"])
+
+                        if score > best_score:
+                            self.save(output_dir)
+
+                        print(json.dumps({**logs, **{"step": global_step}}))
 
                 if 0 < max_steps < global_step:
                     epoch_iterator.close()
@@ -346,8 +438,17 @@ class TransformerModelWrapper:
 
         return global_step, (tr_loss / global_step if global_step > 0 else -1)
 
-    def eval(self, eval_data: List[InputExample], device, per_gpu_eval_batch_size: int = 8, n_gpu: int = 1,
-             priming: bool = False, decoding_strategy: str = 'default', local_rank=-1) -> Dict:
+    def eval(
+        self,
+        eval_data: List[InputExample],
+        device,
+        per_gpu_eval_batch_size: int = 8,
+        n_gpu: int = 1,
+        priming: bool = False,
+        decoding_strategy: str = "default",
+        local_rank=-1,
+        **_
+    ) -> Dict:
         """
         Evaluate the underlying language model.
 
@@ -381,13 +482,16 @@ class TransformerModelWrapper:
             self.model.eval()
 
             batch = {k: t.to(device) for k, t in batch.items()}
-            labels = batch['labels']
-            indices = batch['idx']
+            labels = batch["labels"]
+            indices = batch["idx"]
             with torch.no_grad():
 
                 # some tasks require special evaluation
-                logits = self.task_helper.eval_step(batch,
-                                                    decoding_strategy=decoding_strategy) if self.task_helper else None
+                logits = (
+                    self.task_helper.eval_step(batch, decoding_strategy=decoding_strategy)
+                    if self.task_helper
+                    else None
+                )
 
                 if logits is None:
                     logits = EVALUATION_STEP_FUNCTIONS[self.config.wrapper_type](self)(batch)
@@ -396,61 +500,70 @@ class TransformerModelWrapper:
                 preds = logits
                 out_label_ids = labels
                 all_indices = indices
-                if 'question_idx' in batch:
-                    question_ids = batch['question_idx']
+                if "question_idx" in batch:
+                    question_ids = batch["question_idx"]
             else:
                 preds = torch.cat((preds, logits), dim=0)
                 out_label_ids = torch.cat((out_label_ids, labels), dim=0)
                 all_indices = torch.cat((all_indices, indices), dim=0)
-                if 'question_idx' in batch:
-                    question_ids = torch.cat((question_ids, batch['question_idx']), dim=0)
+                if "question_idx" in batch:
+                    question_ids = torch.cat((question_ids, batch["question_idx"]), dim=0)
 
         if local_rank != -1:
-            preds = distributed_concat(preds, num_total_examples=len(eval_data), interleave=True).detach().cpu().numpy()
-            out_label_ids = distributed_concat(out_label_ids, num_total_examples=len(eval_data),
-                                               interleave=True).detach().cpu().numpy()
-            all_indices = distributed_concat(all_indices, num_total_examples=len(eval_data),
-                                             interleave=True).detach().cpu().numpy()
-            if 'question_idx' in batch:
-                question_ids = distributed_concat(question_ids,
-                                                  num_total_examples=len(eval_data),
-                                                  interleave=True).detach().cpu().numpy()
+            preds = (
+                distributed_concat(preds, num_total_examples=len(eval_data), interleave=True).detach().cpu().numpy()
+            )
+            out_label_ids = (
+                distributed_concat(out_label_ids, num_total_examples=len(eval_data), interleave=True)
+                .detach()
+                .cpu()
+                .numpy()
+            )
+            all_indices = (
+                distributed_concat(all_indices, num_total_examples=len(eval_data), interleave=True)
+                .detach()
+                .cpu()
+                .numpy()
+            )
+            if "question_idx" in batch:
+                question_ids = (
+                    distributed_concat(question_ids, num_total_examples=len(eval_data), interleave=True)
+                    .detach()
+                    .cpu()
+                    .numpy()
+                )
         else:
             preds = preds.detach().cpu().numpy()
             out_label_ids = out_label_ids.detach().cpu().numpy()
             all_indices = all_indices.detach().cpu().numpy()
-            if 'question_idx' in batch:
+            if "question_idx" in batch:
                 question_ids = question_ids.detach().cpu().numpy()
 
-        return {
-            'indices': all_indices,
-            'logits': preds,
-            'labels': out_label_ids,
-            'question_ids': question_ids
-        }
+        return {"indices": all_indices, "logits": preds, "labels": out_label_ids, "question_ids": question_ids}
 
     def _generate_dataset(self, data: List[InputExample], labelled: bool = True, priming: bool = False):
         features = self._convert_examples_to_features(data, labelled=labelled, priming=priming)
         feature_dict = {
-            'input_ids': torch.tensor([f.input_ids for f in features], dtype=torch.long),
-            'attention_mask': torch.tensor([f.attention_mask for f in features], dtype=torch.long),
-            'token_type_ids': torch.tensor([f.token_type_ids for f in features], dtype=torch.long),
-            'labels': torch.tensor([f.label for f in features], dtype=torch.long),
-            'mlm_labels': torch.tensor([f.mlm_labels for f in features], dtype=torch.long),
-            'logits': torch.tensor([f.logits for f in features], dtype=torch.float),
-            'idx': torch.tensor([f.idx for f in features], dtype=torch.long)
+            "input_ids": torch.tensor([f.input_ids for f in features], dtype=torch.long),
+            "attention_mask": torch.tensor([f.attention_mask for f in features], dtype=torch.long),
+            "token_type_ids": torch.tensor([f.token_type_ids for f in features], dtype=torch.long),
+            "labels": torch.tensor([f.label for f in features], dtype=torch.long),
+            "mlm_labels": torch.tensor([f.mlm_labels for f in features], dtype=torch.long),
+            "logits": torch.tensor([f.logits for f in features], dtype=torch.float),
+            "idx": torch.tensor([f.idx for f in features], dtype=torch.long),
         }
         if self.config.wrapper_type == PLM_WRAPPER:
-            feature_dict['perm_mask'] = torch.tensor([f.perm_mask for f in features], dtype=torch.float)
-            feature_dict['target_mapping'] = torch.tensor([f.target_mapping for f in features], dtype=torch.float)
+            feature_dict["perm_mask"] = torch.tensor([f.perm_mask for f in features], dtype=torch.float)
+            feature_dict["target_mapping"] = torch.tensor([f.target_mapping for f in features], dtype=torch.float)
 
         if self.task_helper:
             self.task_helper.add_features_to_dict(features, feature_dict)
 
         return DictDataset(**feature_dict)
 
-    def _convert_examples_to_features(self, examples: List[InputExample], labelled: bool = True,
-                                      priming: bool = False) -> List[InputFeatures]:
+    def _convert_examples_to_features(
+        self, examples: List[InputExample], labelled: bool = True, priming: bool = False
+    ) -> List[InputFeatures]:
         features = []
         for (ex_index, example) in enumerate(examples):
             if ex_index % 100000 == 0:
@@ -469,14 +582,15 @@ class TransformerModelWrapper:
         labels = input_ids.clone()
         # We sample a few tokens in each sequence for masked-LM training (with probability 0.15)
         probability_matrix = torch.full(labels.shape, 0.15)
-        special_tokens_mask = [self.tokenizer.get_special_tokens_mask(val, already_has_special_tokens=True) for val in
-                               labels.tolist()]
+        special_tokens_mask = [
+            self.tokenizer.get_special_tokens_mask(val, already_has_special_tokens=True) for val in labels.tolist()
+        ]
         probability_matrix.masked_fill_(torch.tensor(special_tokens_mask, dtype=torch.bool), value=0.0)
 
         masked_indices = torch.bernoulli(probability_matrix).bool()
 
         # if a version of transformers < 2.4.0 is used, -1 is the expected value for indices to ignore
-        if [int(v) for v in transformers_version.split('.')][:3] >= [2, 4, 0]:
+        if [int(v) for v in transformers_version.split(".")][:3] >= [2, 4, 0]:
             ignore_value = -100
         else:
             ignore_value = -1
@@ -497,18 +611,23 @@ class TransformerModelWrapper:
 
     def generate_default_inputs(self, batch: Dict[str, torch.Tensor]) -> Dict[str, torch.Tensor]:
         """Generate the default inputs required by almost every language model."""
-        inputs = {'input_ids': batch['input_ids'], 'attention_mask': batch['attention_mask']}
-        if self.config.model_type in ['bert', 'xlnet']:
-            inputs['token_type_ids'] = batch['token_type_ids']
+        inputs = {"input_ids": batch["input_ids"], "attention_mask": batch["attention_mask"]}
+        if self.config.model_type in ["bert", "xlnet"]:
+            inputs["token_type_ids"] = batch["token_type_ids"]
         return inputs
 
-    def mlm_train_step(self, labeled_batch: Dict[str, torch.Tensor],
-                       unlabeled_batch: Optional[Dict[str, torch.Tensor]] = None, lm_training: bool = False,
-                       alpha: float = 0, **_) -> torch.Tensor:
+    def mlm_train_step(
+        self,
+        labeled_batch: Dict[str, torch.Tensor],
+        unlabeled_batch: Optional[Dict[str, torch.Tensor]] = None,
+        lm_training: bool = False,
+        alpha: float = 0,
+        **_
+    ) -> torch.Tensor:
         """Perform a MLM training step."""
 
         inputs = self.generate_default_inputs(labeled_batch)
-        mlm_labels, labels = labeled_batch['mlm_labels'], labeled_batch['labels']
+        mlm_labels, labels = labeled_batch["mlm_labels"], labeled_batch["labels"]
 
         outputs = self.model(**inputs)
         prediction_scores = self.preprocessor.pvp.convert_mlm_logits_to_cls_logits(mlm_labels, outputs[0])
@@ -516,7 +635,7 @@ class TransformerModelWrapper:
 
         if lm_training:
             lm_inputs = self.generate_default_inputs(unlabeled_batch)
-            lm_inputs['masked_lm_labels'] = unlabeled_batch['mlm_labels']
+            lm_inputs["masked_lm_labels"] = unlabeled_batch["mlm_labels"]
             lm_loss = self.model(**lm_inputs)[0]
             loss = alpha * loss + (1 - alpha) * lm_loss
         return loss
@@ -525,8 +644,8 @@ class TransformerModelWrapper:
         """Perform a PLM training step."""
 
         inputs = self.generate_default_inputs(labeled_batch)
-        inputs['perm_mask'], inputs['target_mapping'] = labeled_batch['perm_mask'], labeled_batch['target_mapping']
-        labels = labeled_batch['labels']
+        inputs["perm_mask"], inputs["target_mapping"] = labeled_batch["perm_mask"], labeled_batch["target_mapping"]
+        labels = labeled_batch["labels"]
         outputs = self.model(**inputs)
         prediction_scores = self.preprocessor.pvp.convert_plm_logits_to_cls_logits(outputs[0])
         loss = nn.CrossEntropyLoss()(prediction_scores.view(-1, len(self.config.label_list)), labels.view(-1))
@@ -536,18 +655,19 @@ class TransformerModelWrapper:
 
         return loss
 
-    def sequence_classifier_train_step(self, batch: Dict[str, torch.Tensor], use_logits: bool = False,
-                                       temperature: float = 1, **_) -> torch.Tensor:
+    def sequence_classifier_train_step(
+        self, batch: Dict[str, torch.Tensor], use_logits: bool = False, temperature: float = 1, **_
+    ) -> torch.Tensor:
         """Perform a sequence classifier training step."""
 
         inputs = self.generate_default_inputs(batch)
         if not use_logits:
-            inputs['labels'] = batch['labels']
+            inputs["labels"] = batch["labels"]
 
         outputs = self.model(**inputs)
 
         if use_logits:
-            logits_predicted, logits_target = outputs[0], batch['logits']
+            logits_predicted, logits_target = outputs[0], batch["logits"]
             return distillation_loss(logits_predicted, logits_target, temperature)
         else:
             return outputs[0]
@@ -556,12 +676,12 @@ class TransformerModelWrapper:
         """Perform a MLM evaluation step."""
         inputs = self.generate_default_inputs(batch)
         outputs = self.model(**inputs)
-        return self.preprocessor.pvp.convert_mlm_logits_to_cls_logits(batch['mlm_labels'], outputs[0])
+        return self.preprocessor.pvp.convert_mlm_logits_to_cls_logits(batch["mlm_labels"], outputs[0])
 
     def plm_eval_step(self, batch: Dict[str, torch.Tensor]) -> torch.Tensor:
         """Perform a PLM evaluation step."""
         inputs = self.generate_default_inputs(batch)
-        inputs['perm_mask'], inputs['target_mapping'] = batch['perm_mask'], batch['target_mapping']
+        inputs["perm_mask"], inputs["target_mapping"] = batch["perm_mask"], batch["target_mapping"]
         outputs = self.model(**inputs)
         return self.preprocessor.pvp.convert_plm_logits_to_cls_logits(outputs[0])
 

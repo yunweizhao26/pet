@@ -26,7 +26,7 @@ import log
 from pet import task_helpers
 from pet.utils import InputExample
 
-logger = log.get_logger('root')
+logger = log.get_logger("root")
 
 
 def _shuffle_and_restrict(examples: List[InputExample], num_examples: int, seed: int = 42) -> List[InputExample]:
@@ -198,12 +198,12 @@ class AgnewsProcessor(DataProcessor):
         examples = []
 
         with open(path) as f:
-            reader = csv.reader(f, delimiter=',')
+            reader = csv.reader(f, delimiter=",")
             for idx, row in enumerate(reader):
                 label, headline, body = row
                 guid = "%s-%s" % (set_type, idx)
-                text_a = headline.replace('\\', ' ')
-                text_b = body.replace('\\', ' ')
+                text_a = headline.replace("\\", " ")
+                text_b = body.replace("\\", " ")
 
                 example = InputExample(guid=guid, text_a=text_a, text_b=text_b, label=label)
                 examples.append(example)
@@ -233,14 +233,18 @@ class YahooAnswersProcessor(DataProcessor):
     def _create_examples(path: str, set_type: str) -> List[InputExample]:
         examples = []
 
-        with open(path, encoding='utf8') as f:
-            reader = csv.reader(f, delimiter=',')
+        with open(path, encoding="utf8") as f:
+            reader = csv.reader(f, delimiter=",")
             for idx, row in enumerate(reader):
                 label, question_title, question_body, answer = row
                 guid = "%s-%s" % (set_type, idx)
-                text_a = ' '.join([question_title.replace('\\n', ' ').replace('\\', ' '),
-                                   question_body.replace('\\n', ' ').replace('\\', ' ')])
-                text_b = answer.replace('\\n', ' ').replace('\\', ' ')
+                text_a = " ".join(
+                    [
+                        question_title.replace("\\n", " ").replace("\\", " "),
+                        question_body.replace("\\n", " ").replace("\\", " "),
+                    ]
+                )
+                text_b = answer.replace("\\n", " ").replace("\\", " ")
 
                 example = InputExample(guid=guid, text_a=text_a, text_b=text_b, label=label)
                 examples.append(example)
@@ -271,11 +275,11 @@ class YelpPolarityProcessor(DataProcessor):
         examples = []
 
         with open(path) as f:
-            reader = csv.reader(f, delimiter=',')
+            reader = csv.reader(f, delimiter=",")
             for idx, row in enumerate(reader):
                 label, body = row
                 guid = "%s-%s" % (set_type, idx)
-                text_a = body.replace('\\n', ' ').replace('\\', ' ')
+                text_a = body.replace("\\n", " ").replace("\\", " ")
 
                 example = InputExample(guid=guid, text_a=text_a, label=label)
                 examples.append(example)
@@ -298,7 +302,7 @@ class XStanceProcessor(DataProcessor):
 
     def __init__(self, language: str = None):
         if language is not None:
-            assert language in ['de', 'fr']
+            assert language in ["de", "fr"]
         self.language = language
 
     def get_train_examples(self, data_dir):
@@ -319,14 +323,14 @@ class XStanceProcessor(DataProcessor):
     def _create_examples(self, path: str) -> List[InputExample]:
         examples = []
 
-        with open(path, encoding='utf8') as f:
+        with open(path, encoding="utf8") as f:
             for line in f:
                 example_json = json.loads(line)
-                label = example_json['label']
-                id_ = example_json['id']
-                text_a = example_json['question']
-                text_b = example_json['comment']
-                language = example_json['language']
+                label = example_json["label"]
+                id_ = example_json["id"]
+                text_a = example_json["question"]
+                text_b = example_json["comment"]
+                language = example_json["language"]
 
                 if self.language is not None and language != self.language:
                     continue
@@ -358,20 +362,21 @@ class RteProcessor(DataProcessor):
     def get_labels(self):
         return ["entailment", "not_entailment"]
 
-    def _create_examples(self, path: str, set_type: str, hypothesis_name: str = "hypothesis",
-                         premise_name: str = "premise") -> List[InputExample]:
+    def _create_examples(
+        self, path: str, set_type: str, hypothesis_name: str = "hypothesis", premise_name: str = "premise"
+    ) -> List[InputExample]:
         examples = []
 
-        with open(path, encoding='utf8') as f:
+        with open(path, encoding="utf8") as f:
             for line_idx, line in enumerate(f):
                 example_json = json.loads(line)
-                idx = example_json['idx']
+                idx = example_json["idx"]
                 if isinstance(idx, str):
                     try:
                         idx = int(idx)
                     except ValueError:
                         idx = line_idx
-                label = example_json.get('label')
+                label = example_json.get("label")
                 guid = "%s-%s" % (set_type, idx)
                 text_a = example_json[premise_name]
                 text_b = example_json[hypothesis_name]
@@ -433,17 +438,17 @@ class WicProcessor(DataProcessor):
     @staticmethod
     def _create_examples(path: str, set_type: str) -> List[InputExample]:
         examples = []
-        with open(path, encoding='utf8') as f:
+        with open(path, encoding="utf8") as f:
             for line in f:
                 example_json = json.loads(line)
-                idx = example_json['idx']
+                idx = example_json["idx"]
                 if isinstance(idx, str):
                     idx = int(idx)
-                label = "T" if example_json.get('label') else "F"
+                label = "T" if example_json.get("label") else "F"
                 guid = "%s-%s" % (set_type, idx)
-                text_a = example_json['sentence1']
-                text_b = example_json['sentence2']
-                meta = {'word': example_json['word']}
+                text_a = example_json["sentence1"]
+                text_b = example_json["sentence2"]
+                meta = {"word": example_json["word"]}
                 example = InputExample(guid=guid, text_a=text_a, text_b=text_b, label=label, idx=idx, meta=meta)
                 examples.append(example)
         return examples
@@ -471,36 +476,38 @@ class WscProcessor(DataProcessor):
     def _create_examples(path: str, set_type: str) -> List[InputExample]:
         examples = []
 
-        with open(path, encoding='utf8') as f:
+        with open(path, encoding="utf8") as f:
             for line in f:
                 example_json = json.loads(line)
-                idx = example_json['idx']
-                label = str(example_json['label']) if 'label' in example_json else None
+                idx = example_json["idx"]
+                label = str(example_json["label"]) if "label" in example_json else None
                 guid = "%s-%s" % (set_type, idx)
-                text_a = example_json['text']
+                text_a = example_json["text"]
                 meta = {
-                    'span1_text': example_json['target']['span1_text'],
-                    'span2_text': example_json['target']['span2_text'],
-                    'span1_index': example_json['target']['span1_index'],
-                    'span2_index': example_json['target']['span2_index']
+                    "span1_text": example_json["target"]["span1_text"],
+                    "span2_text": example_json["target"]["span2_text"],
+                    "span1_index": example_json["target"]["span1_index"],
+                    "span2_index": example_json["target"]["span2_index"],
                 }
 
                 # the indices in the dataset are wrong for some examples, so we manually fix them
-                span1_index, span1_text = meta['span1_index'], meta['span1_text']
-                span2_index, span2_text = meta['span2_index'], meta['span2_text']
+                span1_index, span1_text = meta["span1_index"], meta["span1_text"]
+                span2_index, span2_text = meta["span2_index"], meta["span2_text"]
                 words_a = text_a.split()
                 words_a_lower = text_a.lower().split()
                 words_span1_text = span1_text.lower().split()
                 span1_len = len(words_span1_text)
 
-                if words_a_lower[span1_index:span1_index + span1_len] != words_span1_text:
+                if words_a_lower[span1_index : span1_index + span1_len] != words_span1_text:
                     for offset in [-1, +1]:
-                        if words_a_lower[span1_index + offset:span1_index + span1_len + offset] == words_span1_text:
+                        if words_a_lower[span1_index + offset : span1_index + span1_len + offset] == words_span1_text:
                             span1_index += offset
 
-                if words_a_lower[span1_index:span1_index + span1_len] != words_span1_text:
-                    logger.warning(f"Got '{words_a_lower[span1_index:span1_index + span1_len]}' but expected "
-                                   f"'{words_span1_text}' at index {span1_index} for '{words_a}'")
+                if words_a_lower[span1_index : span1_index + span1_len] != words_span1_text:
+                    logger.warning(
+                        f"Got '{words_a_lower[span1_index:span1_index + span1_len]}' but expected "
+                        f"'{words_span1_text}' at index {span1_index} for '{words_a}'"
+                    )
 
                 if words_a[span2_index] != span2_text:
                     for offset in [-1, +1]:
@@ -508,18 +515,21 @@ class WscProcessor(DataProcessor):
                             span2_index += offset
 
                     if words_a[span2_index] != span2_text and words_a[span2_index].startswith(span2_text):
-                        words_a = words_a[:span2_index] \
-                                  + [words_a[span2_index][:len(span2_text)], words_a[span2_index][len(span2_text):]] \
-                                  + words_a[span2_index + 1:]
+                        words_a = (
+                            words_a[:span2_index]
+                            + [words_a[span2_index][: len(span2_text)], words_a[span2_index][len(span2_text) :]]
+                            + words_a[span2_index + 1 :]
+                        )
 
-                assert words_a[span2_index] == span2_text, \
-                    f"Got '{words_a[span2_index]}' but expected '{span2_text}' at index {span2_index} for '{words_a}'"
+                assert (
+                    words_a[span2_index] == span2_text
+                ), f"Got '{words_a[span2_index]}' but expected '{span2_text}' at index {span2_index} for '{words_a}'"
 
-                text_a = ' '.join(words_a)
-                meta['span1_index'], meta['span2_index'] = span1_index, span2_index
+                text_a = " ".join(words_a)
+                meta["span1_index"], meta["span2_index"] = span1_index, span2_index
 
                 example = InputExample(guid=guid, text_a=text_a, label=label, meta=meta, idx=idx)
-                if set_type == 'train' and label != 'True':
+                if set_type == "train" and label != "True":
                     continue
                 examples.append(example)
 
@@ -548,14 +558,14 @@ class BoolQProcessor(DataProcessor):
     def _create_examples(path: str, set_type: str) -> List[InputExample]:
         examples = []
 
-        with open(path, encoding='utf8') as f:
+        with open(path, encoding="utf8") as f:
             for line in f:
                 example_json = json.loads(line)
-                idx = example_json['idx']
-                label = str(example_json['label']) if 'label' in example_json else None
+                idx = example_json["idx"]
+                label = str(example_json["label"]) if "label" in example_json else None
                 guid = "%s-%s" % (set_type, idx)
-                text_a = example_json['passage']
-                text_b = example_json['question']
+                text_a = example_json["passage"]
+                text_b = example_json["question"]
                 example = InputExample(guid=guid, text_a=text_a, text_b=text_b, label=label, idx=idx)
                 examples.append(example)
 
@@ -584,31 +594,27 @@ class CopaProcessor(DataProcessor):
     def _create_examples(path: str, set_type: str) -> List[InputExample]:
         examples = []
 
-        with open(path, encoding='utf8') as f:
+        with open(path, encoding="utf8") as f:
             for line in f:
                 example_json = json.loads(line)
-                label = str(example_json['label']) if 'label' in example_json else None
-                idx = example_json['idx']
+                label = str(example_json["label"]) if "label" in example_json else None
+                idx = example_json["idx"]
                 guid = "%s-%s" % (set_type, idx)
-                text_a = example_json['premise']
+                text_a = example_json["premise"]
                 meta = {
-                    'choice1': example_json['choice1'],
-                    'choice2': example_json['choice2'],
-                    'question': example_json['question']
+                    "choice1": example_json["choice1"],
+                    "choice2": example_json["choice2"],
+                    "question": example_json["question"],
                 }
                 example = InputExample(guid=guid, text_a=text_a, label=label, meta=meta, idx=idx)
                 examples.append(example)
 
-        if set_type == 'train' or set_type == 'unlabeled':
+        if set_type == "train" or set_type == "unlabeled":
             mirror_examples = []
             for ex in examples:
                 label = "1" if ex.label == "0" else "0"
-                meta = {
-                    'choice1': ex.meta['choice2'],
-                    'choice2': ex.meta['choice1'],
-                    'question': ex.meta['question']
-                }
-                mirror_example = InputExample(guid=ex.guid + 'm', text_a=ex.text_a, label=label, meta=meta)
+                meta = {"choice1": ex.meta["choice2"], "choice2": ex.meta["choice1"], "question": ex.meta["question"]}
+                mirror_example = InputExample(guid=ex.guid + "m", text_a=ex.text_a, label=label, meta=meta)
                 mirror_examples.append(mirror_example)
             examples += mirror_examples
             logger.info(f"Added {len(mirror_examples)} mirror examples, total size is {len(examples)}...")
@@ -637,35 +643,39 @@ class MultiRcProcessor(DataProcessor):
     def _create_examples(path: str, set_type: str) -> List[InputExample]:
         examples = []
 
-        with open(path, encoding='utf8') as f:
+        with open(path, encoding="utf8") as f:
             for line in f:
                 example_json = json.loads(line)
 
-                passage_idx = example_json['idx']
-                text = example_json['passage']['text']
-                questions = example_json['passage']['questions']
+                passage_idx = example_json["idx"]
+                text = example_json["passage"]["text"]
+                questions = example_json["passage"]["questions"]
                 for question_json in questions:
                     question = question_json["question"]
-                    question_idx = question_json['idx']
+                    question_idx = question_json["idx"]
                     answers = question_json["answers"]
                     for answer_json in answers:
-                        label = str(answer_json["label"]) if 'label' in answer_json else None
+                        label = str(answer_json["label"]) if "label" in answer_json else None
                         answer_idx = answer_json["idx"]
-                        guid = f'{set_type}-p{passage_idx}-q{question_idx}-a{answer_idx}'
+                        guid = f"{set_type}-p{passage_idx}-q{question_idx}-a{answer_idx}"
                         meta = {
-                            'passage_idx': passage_idx,
-                            'question_idx': question_idx,
-                            'answer_idx': answer_idx,
-                            'answer': answer_json["text"]
+                            "passage_idx": passage_idx,
+                            "question_idx": question_idx,
+                            "answer_idx": answer_idx,
+                            "answer": answer_json["text"],
                         }
                         idx = [passage_idx, question_idx, answer_idx]
-                        example = InputExample(guid=guid, text_a=text, text_b=question, label=label, meta=meta, idx=idx)
+                        example = InputExample(
+                            guid=guid, text_a=text, text_b=question, label=label, meta=meta, idx=idx
+                        )
                         examples.append(example)
 
-        question_indices = list(set(example.meta['question_idx'] for example in examples))
+        question_indices = list(set(example.meta["question_idx"] for example in examples))
         label_distribution = Counter(example.label for example in examples)
-        logger.info(f"Returning {len(examples)} examples corresponding to {len(question_indices)} questions with label "
-                    f"distribution {list(label_distribution.items())}")
+        logger.info(
+            f"Returning {len(examples)} examples corresponding to {len(question_indices)} questions with label "
+            f"distribution {list(label_distribution.items())}"
+        )
         return examples
 
 
@@ -693,72 +703,75 @@ class RecordProcessor(DataProcessor):
 
         entity_shuffler = random.Random(seed)
 
-        with open(path, encoding='utf8') as f:
+        with open(path, encoding="utf8") as f:
             for idx, line in enumerate(f):
                 example_json = json.loads(line)
 
-                idx = example_json['idx']
-                text = example_json['passage']['text']
+                idx = example_json["idx"]
+                text = example_json["passage"]["text"]
                 entities = set()
 
-                for entity_json in example_json['passage']['entities']:
-                    start = entity_json['start']
-                    end = entity_json['end']
-                    entity = text[start:end + 1]
+                for entity_json in example_json["passage"]["entities"]:
+                    start = entity_json["start"]
+                    end = entity_json["end"]
+                    entity = text[start : end + 1]
                     entities.add(entity)
 
                 entities = list(entities)
 
                 text = text.replace("@highlight\n", "- ")  # we follow the GPT-3 paper wrt @highlight annotations
-                questions = example_json['qas']
+                questions = example_json["qas"]
 
                 for question_json in questions:
-                    question = question_json['query']
-                    question_idx = question_json['idx']
+                    question = question_json["query"]
+                    question_idx = question_json["idx"]
                     answers = set()
 
-                    for answer_json in question_json.get('answers', []):
-                        answer = answer_json['text']
+                    for answer_json in question_json.get("answers", []):
+                        answer = answer_json["text"]
                         answers.add(answer)
 
                     answers = list(answers)
 
-                    if set_type == 'train':
+                    if set_type == "train":
                         # create a single example per *correct* answer
                         for answer_idx, answer in enumerate(answers):
                             candidates = [ent for ent in entities if ent not in answers]
                             if len(candidates) > max_train_candidates_per_question - 1:
                                 entity_shuffler.shuffle(candidates)
-                                candidates = candidates[:max_train_candidates_per_question - 1]
+                                candidates = candidates[: max_train_candidates_per_question - 1]
 
-                            guid = f'{set_type}-p{idx}-q{question_idx}-a{answer_idx}'
+                            guid = f"{set_type}-p{idx}-q{question_idx}-a{answer_idx}"
                             meta = {
-                                'passage_idx': idx,
-                                'question_idx': question_idx,
-                                'candidates': [answer] + candidates,
-                                'answers': [answer]
+                                "passage_idx": idx,
+                                "question_idx": question_idx,
+                                "candidates": [answer] + candidates,
+                                "answers": [answer],
                             }
                             ex_idx = [idx, question_idx, answer_idx]
-                            example = InputExample(guid=guid, text_a=text, text_b=question, label="1", meta=meta,
-                                                   idx=ex_idx)
+                            example = InputExample(
+                                guid=guid, text_a=text, text_b=question, label="1", meta=meta, idx=ex_idx
+                            )
                             examples.append(example)
 
                     else:
                         # create just one example with *all* correct answers and *all* answer candidates
-                        guid = f'{set_type}-p{idx}-q{question_idx}'
+                        guid = f"{set_type}-p{idx}-q{question_idx}"
                         meta = {
-                            'passage_idx': idx,
-                            'question_idx': question_idx,
-                            'candidates': entities,
-                            'answers': answers
+                            "passage_idx": idx,
+                            "question_idx": question_idx,
+                            "candidates": entities,
+                            "answers": answers,
                         }
                         example = InputExample(guid=guid, text_a=text, text_b=question, label="1", meta=meta)
                         examples.append(example)
 
-        question_indices = list(set(example.meta['question_idx'] for example in examples))
+        question_indices = list(set(example.meta["question_idx"] for example in examples))
         label_distribution = Counter(example.label for example in examples)
-        logger.info(f"Returning {len(examples)} examples corresponding to {len(question_indices)} questions with label "
-                    f"distribution {list(label_distribution.items())}")
+        logger.info(
+            f"Returning {len(examples)} examples corresponding to {len(question_indices)} questions with label "
+            f"distribution {list(label_distribution.items())}"
+        )
         return examples
 
 
@@ -791,10 +804,7 @@ TASK_HELPERS = {
     "record": task_helpers.RecordTaskHelper,
 }
 
-METRICS = {
-    "cb": ["acc", "f1-macro"],
-    "multirc": ["acc", "f1", "em"]
-}
+METRICS = {"cb": ["acc", "f1-macro"], "multirc": ["acc", "f1", "em"]}
 
 DEFAULT_METRICS = ["acc"]
 
@@ -806,21 +816,31 @@ UNLABELED_SET = "unlabeled"
 SET_TYPES = [TRAIN_SET, DEV_SET, TEST_SET, UNLABELED_SET]
 
 
-def load_examples(task, data_dir: str, set_type: str, *_, num_examples: int = None,
-                  num_examples_per_label: int = None, seed: int = 42) -> List[InputExample]:
+def load_examples(
+    task,
+    data_dir: str,
+    set_type: str,
+    *_,
+    num_examples: int = None,
+    num_examples_per_label: int = None,
+    seed: int = 42
+) -> List[InputExample]:
     """Load examples for a given task."""
-    assert (num_examples is not None) ^ (num_examples_per_label is not None), \
-        "Exactly one of 'num_examples' and 'num_examples_per_label' must be set."
-    assert (not set_type == UNLABELED_SET) or (num_examples is not None), \
-        "For unlabeled data, 'num_examples_per_label' is not allowed"
+    assert (num_examples is not None) ^ (
+        num_examples_per_label is not None
+    ), "Exactly one of 'num_examples' and 'num_examples_per_label' must be set."
+    assert (not set_type == UNLABELED_SET) or (
+        num_examples is not None
+    ), "For unlabeled data, 'num_examples_per_label' is not allowed"
 
     processor = PROCESSORS[task]()
 
-    ex_str = f"num_examples={num_examples}" if num_examples is not None \
+    ex_str = (
+        f"num_examples={num_examples}"
+        if num_examples is not None
         else f"num_examples_per_label={num_examples_per_label}"
-    logger.info(
-        f"Creating features from dataset file at {data_dir} ({ex_str}, set_type={set_type})"
     )
+    logger.info(f"Creating features from dataset file at {data_dir} ({ex_str}, set_type={set_type})")
 
     if set_type == DEV_SET:
         examples = processor.get_dev_examples(data_dir)

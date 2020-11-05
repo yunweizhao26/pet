@@ -39,8 +39,9 @@ class Preprocessor(ABC):
         self.label_map = {label: i for i, label in enumerate(self.wrapper.config.label_list)}
 
     @abstractmethod
-    def get_input_features(self, example: InputExample, labelled: bool, priming: bool = False,
-                           **kwargs) -> InputFeatures:
+    def get_input_features(
+        self, example: InputExample, labelled: bool, priming: bool = False, **kwargs
+    ) -> InputFeatures:
         """Convert the given example into a set of input features"""
         pass
 
@@ -48,12 +49,13 @@ class Preprocessor(ABC):
 class MLMPreprocessor(Preprocessor):
     """Preprocessor for models pretrained using a masked language modeling objective (e.g., BERT)."""
 
-    def get_input_features(self, example: InputExample, labelled: bool, priming: bool = False,
-                           **kwargs) -> InputFeatures:
+    def get_input_features(
+        self, example: InputExample, labelled: bool, priming: bool = False, **kwargs
+    ) -> InputFeatures:
 
         if priming:
             input_ids, token_type_ids = self.pvp.encode(example, priming=True)
-            priming_data = example.meta['priming_data']  # type: List[InputExample]
+            priming_data = example.meta["priming_data"]  # type: List[InputExample]
 
             priming_input_ids = []
             for priming_example in priming_data:
@@ -85,21 +87,29 @@ class MLMPreprocessor(Preprocessor):
 
         if labelled:
             mlm_labels = self.pvp.get_mask_positions(input_ids)
-            if self.wrapper.config.model_type == 'gpt2':
+            if self.wrapper.config.model_type == "gpt2":
                 # shift labels to the left by one
                 mlm_labels.append(mlm_labels.pop(0))
         else:
             mlm_labels = [-1] * self.wrapper.config.max_seq_length
 
-        return InputFeatures(input_ids=input_ids, attention_mask=attention_mask, token_type_ids=token_type_ids,
-                             label=label, mlm_labels=mlm_labels, logits=logits, idx=example.idx)
+        return InputFeatures(
+            input_ids=input_ids,
+            attention_mask=attention_mask,
+            token_type_ids=token_type_ids,
+            label=label,
+            mlm_labels=mlm_labels,
+            logits=logits,
+            idx=example.idx,
+        )
 
 
 class PLMPreprocessor(MLMPreprocessor):
     """Preprocessor for models pretrained using a permuted language modeling objective (e.g., XLNet)."""
 
-    def get_input_features(self, example: InputExample, labelled: bool, priming: bool = False,
-                           **kwargs) -> PLMInputFeatures:
+    def get_input_features(
+        self, example: InputExample, labelled: bool, priming: bool = False, **kwargs
+    ) -> PLMInputFeatures:
         input_features = super().get_input_features(example, labelled, priming, **kwargs)
         input_ids = input_features.input_ids
 
@@ -126,7 +136,7 @@ class SequenceClassifierPreprocessor(Preprocessor):
                 example.text_b if example.text_b else None,
                 add_special_tokens=True,
                 max_length=self.wrapper.config.max_seq_length,
-                truncation=True
+                truncation=True,
             )
         input_ids, token_type_ids = inputs["input_ids"], inputs.get("token_type_ids")
 
@@ -148,5 +158,12 @@ class SequenceClassifierPreprocessor(Preprocessor):
         label = self.label_map[example.label] if example.label is not None else -100
         logits = example.logits if example.logits else [-1]
 
-        return InputFeatures(input_ids=input_ids, attention_mask=attention_mask, token_type_ids=token_type_ids,
-                             label=label, mlm_labels=mlm_labels, logits=logits, idx=example.idx)
+        return InputFeatures(
+            input_ids=input_ids,
+            attention_mask=attention_mask,
+            token_type_ids=token_type_ids,
+            label=label,
+            mlm_labels=mlm_labels,
+            logits=logits,
+            idx=example.idx,
+        )

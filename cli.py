@@ -156,7 +156,7 @@ def main():
                                           final_repetitions=args.sc_repetitions,
                                           reduction=args.reduction, train_data=train_data,
                                           unlabeled_data=unlabeled_data,
-                                          eval_data=eval_data, do_train=args.do_train, do_eval=args.do_eval,
+                                          dev_data=eval_data, do_train=args.do_train, do_eval=args.do_eval,
                                           no_distillation=args.no_distillation, seed=args.seed,
                                           overwrite_dir=args.overwrite_output_dir, save_model=args.save_model,
                                           local_rank=args.local_rank)
@@ -170,7 +170,7 @@ def main():
                                            final_repetitions=args.sc_repetitions,
                                            reduction=args.reduction, train_data=train_data,
                                            unlabeled_data=unlabeled_data,
-                                           eval_data=eval_data, do_train=args.do_train, do_eval=args.do_eval,
+                                           dev_data=eval_data, do_train=args.do_train, do_eval=args.do_eval,
                                            seed=args.seed,
                                            overwrite_dir=args.overwrite_output_dir, save_model=args.save_model,
                                            local_rank=args.local_rank)
@@ -179,7 +179,7 @@ def main():
             final_results = pet.train_classifier(sc_model_cfg, sc_train_cfg, sc_eval_cfg, output_dir=output_dir,
                                                  repetitions=args.sc_repetitions, train_data=train_data,
                                                  unlabeled_data=unlabeled_data,
-                                                 eval_data=eval_data, do_train=args.do_train, do_eval=args.do_eval,
+                                                 dev_data=eval_data, do_train=args.do_train, do_eval=args.do_eval,
                                                  seed=args.seed,
                                                  overwrite_dir=args.overwrite_output_dir, save_model=args.save_model,
                                                  local_rank=args.local_rank)
