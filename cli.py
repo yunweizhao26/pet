@@ -178,7 +178,7 @@ def main():
         dev_data = load_examples(
             args.task_name, data_dir, DEV_SET, num_examples=test_ex, num_examples_per_label=test_ex_per_label
         )
-        if args.do_test == "test":
+        if args.do_test:
             try:
                 test_data = load_examples(
                     args.task_name, data_dir, TEST_SET, num_examples=test_ex, num_examples_per_label=test_ex_per_label
