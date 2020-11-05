@@ -8,6 +8,7 @@ python3 cli.py \
   --output_dir experiments/[TASK_NAME]/roberta/supervised \
   --do_train \
   --do_eval \
+  --do_test \
   --pet_per_gpu_eval_batch_size 4 \
   --pet_per_gpu_train_batch_size 4 \
   --pet_gradient_accumulation_steps 4 \
@@ -35,6 +36,7 @@ python3 cli.py \
   --output_dir experiments/[TASK_NAME]/roberta/supervised \
   --do_train \
   --do_eval \
+  --do_test \
   --pet_per_gpu_eval_batch_size 4 \
   --pet_per_gpu_train_batch_size 4 \
   --pet_gradient_accumulation_steps 4 \
@@ -62,6 +64,7 @@ python3 cli.py \
   --output_dir experiments/[TASK_NAME]/roberta/supervised \
   --do_train \
   --do_eval \
+  --do_test \
   --pet_per_gpu_eval_batch_size 4 \
   --pet_per_gpu_train_batch_size 4 \
   --pet_gradient_accumulation_steps 4 \
@@ -89,6 +92,7 @@ python3 cli.py \
   --output_dir experiments/[TASK_NAME]/roberta/supervised \
   --do_train \
   --do_eval \
+  --do_test \
   --pet_per_gpu_eval_batch_size 4 \
   --pet_per_gpu_train_batch_size 4 \
   --pet_gradient_accumulation_steps 4 \
