@@ -129,16 +129,16 @@ class WrapperConfig(object):
     """A configuration for a :class:`TransformerModelWrapper`."""
 
     def __init__(
-        self,
-        model_type: str,
-        model_name_or_path: str,
-        wrapper_type: str,
-        task_name: str,
-        max_seq_length: int,
-        label_list: List[str],
-        pattern_id: int = 0,
-        verbalizer_file: str = None,
-        cache_dir: str = None,
+            self,
+            model_type: str,
+            model_name_or_path: str,
+            wrapper_type: str,
+            task_name: str,
+            max_seq_length: int,
+            label_list: List[str],
+            pattern_id: int = 0,
+            verbalizer_file: str = None,
+            cache_dir: str = None,
     ):
         """
         Create a new config.
@@ -233,31 +233,31 @@ class TransformerModelWrapper:
             return jsonpickle.decode(f.read())
 
     def train(
-        self,
-        task_train_data: List[InputExample],
-        device,
-        per_gpu_train_batch_size: int = 8,
-        n_gpu: int = 1,
-        num_train_epochs: int = 3,
-        gradient_accumulation_steps: int = 1,
-        weight_decay: float = 0.0,
-        learning_rate: float = 5e-5,
-        adam_epsilon: float = 1e-8,
-        warmup_steps=0,
-        max_grad_norm: float = 1,
-        logging_steps: int = 50,
-        per_gpu_unlabeled_batch_size: int = 8,
-        unlabeled_data: List[InputExample] = None,
-        lm_training: bool = False,
-        use_logits: bool = False,
-        alpha: float = 0.8,
-        temperature: float = 1,
-        max_steps=-1,
-        min_steps=-1,
-        output_dir=None,
-        eval_kwargs=None,
-        local_rank=-1,
-        **_
+            self,
+            task_train_data: List[InputExample],
+            device,
+            per_gpu_train_batch_size: int = 8,
+            n_gpu: int = 1,
+            num_train_epochs: int = 3,
+            gradient_accumulation_steps: int = 1,
+            weight_decay: float = 0.0,
+            learning_rate: float = 5e-5,
+            adam_epsilon: float = 1e-8,
+            warmup_steps=0,
+            max_grad_norm: float = 1,
+            logging_steps: int = 50,
+            per_gpu_unlabeled_batch_size: int = 8,
+            unlabeled_data: List[InputExample] = None,
+            lm_training: bool = False,
+            use_logits: bool = False,
+            alpha: float = 0.8,
+            temperature: float = 1,
+            max_steps=-1,
+            min_steps=-1,
+            output_dir=None,
+            eval_kwargs=None,
+            local_rank=-1,
+            **_
     ):
         """
         Train the underlying language model.
@@ -344,7 +344,10 @@ class TransformerModelWrapper:
         if n_gpu > 1:
             self.model = torch.nn.DataParallel(self.model)
 
-        global_step = 0
+        # The number of passes
+        batch_step = 0
+        # The number of gradient updates
+        accumulated_step = 0
         tr_loss, logging_loss = 0.0, 0.0
         best_score = -1
         self.model.zero_grad()
@@ -354,6 +357,7 @@ class TransformerModelWrapper:
         for _ in train_iterator:
             epoch_iterator = tqdm(train_dataloader, desc="Iteration")
             for step, batch in enumerate(epoch_iterator):
+                batch_step += 1
                 self.model.train()
                 unlabeled_batch = None
 
@@ -391,14 +395,14 @@ class TransformerModelWrapper:
                 loss.backward()
 
                 tr_loss += loss.item()
-                if (step + 1) % gradient_accumulation_steps == 0:
+                if batch_step % gradient_accumulation_steps == 0:
                     torch.nn.utils.clip_grad_norm_(self.model.parameters(), max_grad_norm)
                     optimizer.step()
                     scheduler.step()
                     self.model.zero_grad()
-                    global_step += 1
+                    accumulated_step += 1
 
-                    if logging_steps > 0 and global_step % logging_steps == 0:
+                    if logging_steps > 0 and accumulated_step % logging_steps == 0:
                         logs = {}
                         loss_scalar = (tr_loss - logging_loss) / logging_steps
                         learning_rate_scalar = scheduler.get_lr()[0]
@@ -407,47 +411,43 @@ class TransformerModelWrapper:
                         logging_loss = tr_loss
 
                         if eval_kwargs is not None:
-                            eval_results = self.eval(**eval_kwargs)
-                            predictions = np.argmax(eval_results["logits"], axis=1)
-
-                            if eval_kwargs["config"].metrics:
-                                if "f1" in eval_kwargs["config"].metrics:
-                                    score = f1_score(eval_results["labels"], predictions)
-                                elif "f1-macro" in eval_kwargs["config"].metrics:
-                                    score = f1_score(eval_results["labels"], predictions, average="macro")
-                                elif "em" in eval_kwargs["config"].metrics:
-                                    score = exact_match(
-                                        predictions, eval_results["labels"], eval_results["question_ids"]
-                                    )
-                                elif "acc" in eval_kwargs["config"].metrics:
-                                    score = f1_score(eval_results["labels"], predictions, average="macro")
+                            score = self.in_training_eval(eval_kwargs)
+                            if score > best_score:
+                                logger.info(f"New best score {score} > {best_score} previously, saving model")
+                                self.save(output_dir)
+                                best_score = score
                             else:
-                                score = simple_accuracy(predictions, eval_results["labels"])
+                                logger.info(f"Old best score {best_score} >= {score} currently, not saving model")
 
-                        if score > best_score:
-                            self.save(output_dir)
+                        print(json.dumps({**logs, **{"step": accumulated_step}}))
 
-                        print(json.dumps({**logs, **{"step": global_step}}))
-
-                if 0 < max_steps < global_step:
+                if 0 < max_steps < accumulated_step:
                     epoch_iterator.close()
                     break
-            if 0 < max_steps < global_step:
+            if 0 < max_steps < accumulated_step:
                 train_iterator.close()
                 break
 
-        return global_step, (tr_loss / global_step if global_step > 0 else -1)
+        if eval_kwargs is not None:
+            score = self.in_training_eval(eval_kwargs)
+            if score > best_score:
+                logger.info(f"New best score {score} > {best_score} previously, saving model")
+                self.save(output_dir)
+            else:
+                logger.info(f"Old best score {best_score} >= {score} currently, not saving model")
+
+        return accumulated_step, (tr_loss / accumulated_step if accumulated_step > 0 else -1)
 
     def eval(
-        self,
-        eval_data: List[InputExample],
-        device,
-        per_gpu_eval_batch_size: int = 8,
-        n_gpu: int = 1,
-        priming: bool = False,
-        decoding_strategy: str = "default",
-        local_rank=-1,
-        **_
+            self,
+            eval_data: List[InputExample],
+            device,
+            per_gpu_eval_batch_size: int = 8,
+            n_gpu: int = 1,
+            priming: bool = False,
+            decoding_strategy: str = "default",
+            local_rank=-1,
+            **_
     ) -> Dict:
         """
         Evaluate the underlying language model.
@@ -515,22 +515,22 @@ class TransformerModelWrapper:
             )
             out_label_ids = (
                 distributed_concat(out_label_ids, num_total_examples=len(eval_data), interleave=True)
-                .detach()
-                .cpu()
-                .numpy()
+                    .detach()
+                    .cpu()
+                    .numpy()
             )
             all_indices = (
                 distributed_concat(all_indices, num_total_examples=len(eval_data), interleave=True)
-                .detach()
-                .cpu()
-                .numpy()
+                    .detach()
+                    .cpu()
+                    .numpy()
             )
             if "question_idx" in batch:
                 question_ids = (
                     distributed_concat(question_ids, num_total_examples=len(eval_data), interleave=True)
-                    .detach()
-                    .cpu()
-                    .numpy()
+                        .detach()
+                        .cpu()
+                        .numpy()
                 )
         else:
             preds = preds.detach().cpu().numpy()
@@ -540,6 +540,26 @@ class TransformerModelWrapper:
                 question_ids = question_ids.detach().cpu().numpy()
 
         return {"indices": all_indices, "logits": preds, "labels": out_label_ids, "question_ids": question_ids}
+
+    def in_training_eval(self, eval_kwargs):
+        eval_results = self.eval(**eval_kwargs)
+        predictions = np.argmax(eval_results["logits"], axis=1)
+
+        if eval_kwargs["metrics"]:
+            if "f1" in eval_kwargs["metrics"]:
+                score = f1_score(eval_results["labels"], predictions)
+            elif "f1-macro" in eval_kwargs["metrics"]:
+                score = f1_score(eval_results["labels"], predictions, average="macro")
+            elif "em" in eval_kwargs["metrics"]:
+                score = exact_match(
+                    predictions, eval_results["labels"], eval_results["question_ids"]
+                )
+            else:
+                score = simple_accuracy(predictions, eval_results["labels"])
+        else:
+            score = simple_accuracy(predictions, eval_results["labels"])
+
+        return score
 
     def _generate_dataset(self, data: List[InputExample], labelled: bool = True, priming: bool = False):
         features = self._convert_examples_to_features(data, labelled=labelled, priming=priming)
@@ -562,7 +582,7 @@ class TransformerModelWrapper:
         return DictDataset(**feature_dict)
 
     def _convert_examples_to_features(
-        self, examples: List[InputExample], labelled: bool = True, priming: bool = False
+            self, examples: List[InputExample], labelled: bool = True, priming: bool = False
     ) -> List[InputFeatures]:
         features = []
         for (ex_index, example) in enumerate(examples):
@@ -617,12 +637,12 @@ class TransformerModelWrapper:
         return inputs
 
     def mlm_train_step(
-        self,
-        labeled_batch: Dict[str, torch.Tensor],
-        unlabeled_batch: Optional[Dict[str, torch.Tensor]] = None,
-        lm_training: bool = False,
-        alpha: float = 0,
-        **_
+            self,
+            labeled_batch: Dict[str, torch.Tensor],
+            unlabeled_batch: Optional[Dict[str, torch.Tensor]] = None,
+            lm_training: bool = False,
+            alpha: float = 0,
+            **_
     ) -> torch.Tensor:
         """Perform a MLM training step."""
 
@@ -656,7 +676,7 @@ class TransformerModelWrapper:
         return loss
 
     def sequence_classifier_train_step(
-        self, batch: Dict[str, torch.Tensor], use_logits: bool = False, temperature: float = 1, **_
+            self, batch: Dict[str, torch.Tensor], use_logits: bool = False, temperature: float = 1, **_
     ) -> torch.Tensor:
         """Perform a sequence classifier training step."""
 

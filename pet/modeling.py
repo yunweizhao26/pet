@@ -587,10 +587,10 @@ def train_pet_ensemble(
                         save_logits(os.path.join(pattern_iter_output_dir, "eval_logits.txt"), eval_result["logits"])
 
                     scores = eval_result["scores"]
-                    logger.info("--- RESULT (pattern_id={}, iteration={}) ---".format(pattern_id, iteration))
+                    logger.info("--- {} result (pattern_id={}, iteration={}) ---".format(split, pattern_id, iteration))
                     logger.info(scores)
 
-                    results_dict["test_set_after_training"] = scores
+                    results_dict[f"{split}_set_after_training"] = scores
                     with open(os.path.join(pattern_iter_output_dir, "results.json"), "w") as fh:
                         json.dump(results_dict, fh)
 
@@ -712,7 +712,7 @@ def train_single_model(
 
 def evaluate(
     model: TransformerModelWrapper,
-    dev_data: List[InputExample],
+    eval_data: List[InputExample],
     config: EvalConfig,
     priming_data: List[InputExample] = None,
     local_rank=-1,
@@ -721,14 +721,14 @@ def evaluate(
     Evaluate a model.
 
     :param model: the model to evaluate
-    :param dev_data: the examples for evaluation
+    :param eval_data: the examples for evaluation
     :param config: the evaluation config
     :param priming_data: an optional list of priming data to use
     :return: a dictionary containing the model's logits, predictions and (if any metrics are given) scores
     """
 
     if config.priming:
-        for example in dev_data:
+        for example in eval_data:
             example.meta["priming_data"] = priming_data
 
     metrics = config.metrics if config.metrics else ["acc"]
@@ -736,7 +736,7 @@ def evaluate(
 
     model.model.to(device)
     results = model.eval(
-        dev_data,
+        eval_data,
         device,
         per_gpu_eval_batch_size=config.per_gpu_eval_batch_size,
         n_gpu=config.n_gpu,

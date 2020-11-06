@@ -4,7 +4,7 @@ python cli.py \
 --data_dir data/ \
 --model_type roberta \
 --model_name_or_path roberta-large \
---task_name mnli \
+--task_name copa \
 --output_dir experiments/[TASK_NAME]/roberta/supervised \
 --do_train \
 --do_eval \
@@ -22,6 +22,6 @@ python cli.py \
 --sc_min_steps 250 \
 --sc_max_seq_length 256 \
 --sc_repetitions 3 \
---train_examples 5 10 20 50 100 200 500 1000 2000 5000 10000 20000 \
+--train_examples 5 6 8 10 13 16 20 27 36 50 60 80 100 130 160 200 270 360 400 \
 --overwrite_output_dir \
 --no_distillation
