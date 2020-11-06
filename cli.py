@@ -278,11 +278,18 @@ def main():
 
         if final_results is not None and args.local_rank in [-1, 0]:
             if not wandb_initalized:
-                wandb.init(project=f"pvp-vs-finetuning-{args.task_name}")
+                wandb.init(project=f"pvp-vs-finetuning-{args.task_name}", name=naming_convention(args))
                 wandb_initalized = True
             final_results["training_points"] = n_train_examples
             wandb.log(final_results)
 
+
+def naming_convention(args):
+    method = f"PVP {args.pattern_ids[0]}" if args.method == "pet" else "CLF"
+    model = args.model_type
+    verbalizer = args.verbalizer_file[:7] if args.verbalizer_file is not None else None
+    name = f"{method} {model}" + (f" {verbalizer} verbalizer" if verbalizer is not None else "")
+    return name
 
 if __name__ == "__main__":
     main()

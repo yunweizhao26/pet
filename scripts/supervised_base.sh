@@ -22,5 +22,6 @@ python3 cli.py \
 --sc_max_seq_length 256 \
 --sc_repetitions 1 \
 --train_examples 5 10 50 100 \
+--logging_steps 25 \
 --overwrite_output_dir \
 --no_distillation

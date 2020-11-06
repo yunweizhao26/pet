@@ -23,5 +23,6 @@ python cli.py \
 --sc_max_seq_length 256 \
 --sc_repetitions 3 \
 --train_examples 5 6 8 10 13 16 20 27 36 50 60 80 100 130 160 200 270 360 400 \
+--logging_steps 25 \
 --overwrite_output_dir \
 --no_distillation
