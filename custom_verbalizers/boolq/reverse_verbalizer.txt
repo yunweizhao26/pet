@@ -1,18 +1,18 @@
 0
-false yes
-true no
+False yes
+True no
 1
-false yes
-true no
+False yes
+True no
 2
-false yes
-true no
+False yes
+True no
 4
-false true
-true false
+False true
+True false
 5
-false true
-true false
+False true
+True false
 6
-false true
-true false
+False true
+True false
