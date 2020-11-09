@@ -1,12 +1,16 @@
 0
-not_entailment yes
-entailment no
+contradiction Right
+entailment Wrong
+neutral Maybe
 1
-not_entailment yes
-entailment no
+contradiction Yes
+entailment No
+neutral Maybe
 2
-not_entailment yes
-entailment no
-4
-not_entailment true
-entailment false
+contradiction Right
+entailment Wrong
+neutral Maybe
+3
+contradiction Yes
+entailment No
+neutral Maybe

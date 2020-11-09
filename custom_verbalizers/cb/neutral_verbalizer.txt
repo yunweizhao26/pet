@@ -1,15 +1,16 @@
 0
-not_entailment Tom
+contradiction Tom
 entailment Sam
+neutral Clara
 1
-not_entailment Tom
+contradiction Tom
 entailment Sam
+neutral Clara
 2
-not_entailment Tom
+contradiction Tom
 entailment Sam
+neutral Clara
 3
-not_entailment Tom
+contradiction Tom
 entailment Sam
-4
-not_entailment Tom
-entailment Sam
+neutral Clara
