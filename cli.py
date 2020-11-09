@@ -153,7 +153,8 @@ def main():
     args.task_name = args.task_name.lower()
     if args.task_name not in PROCESSORS:
         raise ValueError("Task '{}' not found".format(args.task_name))
-    args.verbalizer_file = args.verbalizer_file.replace("[TASK_NAME]", args.task_name)
+    if args.verbalizer_file is not None:
+        args.verbalizer_file = args.verbalizer_file.replace("[TASK_NAME]", args.task_name)
     processor = PROCESSORS[args.task_name]()
     args.label_list = processor.get_labels()
 
