@@ -1,0 +1,15 @@
+0
+not_entailment Tom
+entailment Sam
+1
+not_entailment Tom
+entailment Sam
+2
+not_entailment Tom
+entailment Sam
+3
+not_entailment Tom
+entailment Sam
+4
+not_entailment Tom
+entailment Sam

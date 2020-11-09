@@ -287,7 +287,14 @@ def main():
 def naming_convention(args):
     method = f"PVP {args.pattern_ids[0]}" if args.method == "pet" else "CLF"
     model = args.model_type
-    verbalizer = args.verbalizer_file[:7] if args.verbalizer_file is not None else None
+    if args.verbalizer_file is None:
+        verbalizer = None
+    elif "neutral" in args.verbalizer_file:
+        verbalizer = "neutral"
+    elif "reverse" in args.verbalizer_file:
+        verbalizer = "reverse"
+    else:
+        raise ValueError(f"unrecognized verbalizer file {args.verbalizer_file}")
     name = f"{method} {model}" + (f" {verbalizer} verbalizer" if verbalizer is not None else "")
     return name
 

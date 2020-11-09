@@ -1,0 +1,12 @@
+0
+not_entailment yes
+entailment no
+1
+not_entailment yes
+entailment no
+2
+not_entailment yes
+entailment no
+4
+not_entailment true
+entailment false
