@@ -287,7 +287,7 @@ def main():
 def naming_convention(args):
     method = f"PVP {args.pattern_ids[0]}" if args.method == "pet" else "CLF"
     model = args.model_type
-    if args.verbalizer_file is None:
+    if args.verbalizer_file is None or method == "CLF":
         verbalizer = None
     elif "neutral" in args.verbalizer_file:
         verbalizer = "neutral"
