@@ -20,6 +20,7 @@ import warnings
 
 import torch
 import wandb
+from knockknock import slack_sender
 
 import log
 import pet
@@ -29,6 +30,7 @@ from pet.utils import eq_div
 from pet.wrapper import SEQUENCE_CLASSIFIER_WRAPPER, WrapperConfig
 
 logger = log.get_logger("root")
+webhook_url = open("slack_webhook.txt").read()
 
 
 def load_pet_configs(args) -> Tuple[WrapperConfig, pet.TrainConfig, pet.EvalConfig]:
@@ -137,6 +139,7 @@ def load_ipet_config(args) -> pet.IPetConfig:
     return ipet_cfg
 
 
+@slack_sender(webhook_url=webhook_url, channel="Teven")
 def main():
     args = parser.parse_args()
     logger.info("Parameters: {}".format(args))
@@ -299,6 +302,7 @@ def naming_convention(args):
         raise ValueError(f"unrecognized verbalizer file {args.verbalizer_file}")
     name = f"{method} {model}" + (f" {verbalizer} verbalizer" if verbalizer is not None else "")
     return name
+
 
 if __name__ == "__main__":
     main()
