@@ -279,12 +279,13 @@ def main():
                     save_model=args.save_model,
                     local_rank=args.local_rank,
                 )
+
+            else:
+                raise ValueError(f"Training method '{args.method}' not implemented")
+            
         except json.decoder.JSONDecodeError:
             warnings.warn("JSONDecodeError in transformers")
             pass
-
-        else:
-            raise ValueError(f"Training method '{args.method}' not implemented")
 
         if final_results is not None and args.local_rank in [-1, 0]:
             if not wandb_initalized:
