@@ -23,7 +23,7 @@ python3 cli.py \
   --sc_min_steps 250 \
   --sc_max_seq_length 256 \
   --sc_repetitions 1 \
-  --train_examples 5 6 8 10 13 16 20 27 36 50 60 80 100 130 160 200 270 360 400 \
+  --train_examples 10 \
   --warmup_steps 50 \
   --logging_steps 50 \
   --overwrite_output_dir \

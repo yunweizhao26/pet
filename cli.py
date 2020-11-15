@@ -14,6 +14,7 @@
 This script can be used to train and evaluate either a regular supervised model or a PET/iPET model on
 one of the supported tasks and datasets.
 """
+import json
 import os
 from typing import Tuple
 import warnings
@@ -207,76 +208,80 @@ def main():
         sc_model_cfg, sc_train_cfg, sc_eval_cfg = load_sequence_classifier_configs(args)
         ipet_cfg = load_ipet_config(args)
 
-        if args.method == "pet":
-            final_results = pet.train_pet(
-                pet_model_cfg,
-                pet_train_cfg,
-                pet_eval_cfg,
-                sc_model_cfg,
-                sc_train_cfg,
-                sc_eval_cfg,
-                pattern_ids=args.pattern_ids,
-                output_dir=output_dir,
-                ensemble_repetitions=args.pet_repetitions,
-                final_repetitions=args.sc_repetitions,
-                reduction=args.reduction,
-                train_data=train_data,
-                unlabeled_data=unlabeled_data,
-                dev_data=dev_data,
-                test_data=test_data,
-                do_train=args.do_train,
-                do_eval=args.do_eval,
-                no_distillation=args.no_distillation,
-                seed=args.seed,
-                overwrite_dir=args.overwrite_output_dir,
-                save_model=args.save_model,
-                local_rank=args.local_rank,
-            )
+        try:
+            if args.method == "pet":
+                final_results = pet.train_pet(
+                    pet_model_cfg,
+                    pet_train_cfg,
+                    pet_eval_cfg,
+                    sc_model_cfg,
+                    sc_train_cfg,
+                    sc_eval_cfg,
+                    pattern_ids=args.pattern_ids,
+                    output_dir=output_dir,
+                    ensemble_repetitions=args.pet_repetitions,
+                    final_repetitions=args.sc_repetitions,
+                    reduction=args.reduction,
+                    train_data=train_data,
+                    unlabeled_data=unlabeled_data,
+                    dev_data=dev_data,
+                    test_data=test_data,
+                    do_train=args.do_train,
+                    do_eval=args.do_eval,
+                    no_distillation=args.no_distillation,
+                    seed=args.seed,
+                    overwrite_dir=args.overwrite_output_dir,
+                    save_model=args.save_model,
+                    local_rank=args.local_rank,
+                )
 
-        elif args.method == "ipet":
-            final_results = pet.train_ipet(
-                pet_model_cfg,
-                pet_train_cfg,
-                pet_eval_cfg,
-                ipet_cfg,
-                sc_model_cfg,
-                sc_train_cfg,
-                sc_eval_cfg,
-                pattern_ids=args.pattern_ids,
-                output_dir=output_dir,
-                ensemble_repetitions=args.pet_repetitions,
-                final_repetitions=args.sc_repetitions,
-                reduction=args.reduction,
-                train_data=train_data,
-                unlabeled_data=unlabeled_data,
-                dev_data=dev_data,
-                test_data=test_data,
-                do_train=args.do_train,
-                do_eval=args.do_eval,
-                seed=args.seed,
-                overwrite_dir=args.overwrite_output_dir,
-                save_model=args.save_model,
-                local_rank=args.local_rank,
-            )
+            elif args.method == "ipet":
+                final_results = pet.train_ipet(
+                    pet_model_cfg,
+                    pet_train_cfg,
+                    pet_eval_cfg,
+                    ipet_cfg,
+                    sc_model_cfg,
+                    sc_train_cfg,
+                    sc_eval_cfg,
+                    pattern_ids=args.pattern_ids,
+                    output_dir=output_dir,
+                    ensemble_repetitions=args.pet_repetitions,
+                    final_repetitions=args.sc_repetitions,
+                    reduction=args.reduction,
+                    train_data=train_data,
+                    unlabeled_data=unlabeled_data,
+                    dev_data=dev_data,
+                    test_data=test_data,
+                    do_train=args.do_train,
+                    do_eval=args.do_eval,
+                    seed=args.seed,
+                    overwrite_dir=args.overwrite_output_dir,
+                    save_model=args.save_model,
+                    local_rank=args.local_rank,
+                )
 
-        elif args.method == "sequence_classifier":
-            final_results = pet.train_classifier(
-                sc_model_cfg,
-                sc_train_cfg,
-                sc_eval_cfg,
-                output_dir=output_dir,
-                repetitions=args.sc_repetitions,
-                train_data=train_data,
-                unlabeled_data=unlabeled_data,
-                dev_data=dev_data,
-                test_data=test_data,
-                do_train=args.do_train,
-                do_eval=args.do_eval,
-                seed=args.seed,
-                overwrite_dir=args.overwrite_output_dir,
-                save_model=args.save_model,
-                local_rank=args.local_rank,
-            )
+            elif args.method == "sequence_classifier":
+                final_results = pet.train_classifier(
+                    sc_model_cfg,
+                    sc_train_cfg,
+                    sc_eval_cfg,
+                    output_dir=output_dir,
+                    repetitions=args.sc_repetitions,
+                    train_data=train_data,
+                    unlabeled_data=unlabeled_data,
+                    dev_data=dev_data,
+                    test_data=test_data,
+                    do_train=args.do_train,
+                    do_eval=args.do_eval,
+                    seed=args.seed,
+                    overwrite_dir=args.overwrite_output_dir,
+                    save_model=args.save_model,
+                    local_rank=args.local_rank,
+                )
+        except json.decoder.JSONDecodeError:
+            warnings.warn("JSONDecodeError in transformers")
+            pass
 
         else:
             raise ValueError(f"Training method '{args.method}' not implemented")
