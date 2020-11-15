@@ -280,7 +280,7 @@ class TransformerModelWrapper:
         :param use_logits: whether to use the example's logits instead of their labels to compute the loss
         :param alpha: the alpha parameter for auxiliary language modeling
         :param temperature: the temperature for knowledge distillation
-        :param max_steps: the maximum number of training steps, overrides ``num_train_epochs``
+        :param max_steps: the maximum number of training steps, to use with ``num_train_epochs``
         :param min_steps: the minimum number of training steps, to use with ``num_train_epochs``
         :return: a tuple consisting of the total number of steps and the average training loss
         """
@@ -315,10 +315,11 @@ class TransformerModelWrapper:
             )
 
         if max_steps > 0:
-            t_total = max_steps
-            num_train_epochs = max_steps // (max(1, len(train_dataloader) // gradient_accumulation_steps)) + 1
-        else:
-            t_total = len(train_dataloader) // gradient_accumulation_steps * num_train_epochs
+            num_train_epochs = min(
+                num_train_epochs, floor(max_steps / max(1, len(train_dataloader) / gradient_accumulation_steps))
+            )
+
+        t_total = len(train_dataloader) // gradient_accumulation_steps * num_train_epochs
 
         # Prepare optimizer and schedule (linear warmup and decay)
         no_decay = ["bias", "LayerNorm.weight"]
