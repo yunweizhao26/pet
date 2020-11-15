@@ -770,9 +770,6 @@ def _write_results(path: str, results: Dict) -> Dict:
 
     with open(path, "w") as fh:
         for split, split_results in results.items():
-            if split == "test":
-                # TODO: REMOVE WHEN WE GET TEST SETS
-                continue
             for metric in split_results.keys():
                 for pattern_id, values in split_results[metric].items():
                     mean = statistics.mean(values)
@@ -780,8 +777,7 @@ def _write_results(path: str, results: Dict) -> Dict:
                     result_str = "{}_{}-{}: {} +- {}".format(split, metric, pattern_name(pattern_id), mean, stdev)
                     logger.info(result_str)
                     fh.write(result_str + "\n")
-                    # TODO: f"{split}-{metric}-{pattern_name(pattern_id)}"
-                    final_results_dict[f"{metric}-{pattern_name(pattern_id)}"] = mean
+                    final_results_dict[f"{split}-{metric}-{pattern_name(pattern_id)}"] = mean
 
             for metric in split_results.keys():
                 all_results = [
@@ -792,7 +788,7 @@ def _write_results(path: str, results: Dict) -> Dict:
                 result_str = "{}_{}-all-p: {} +- {}".format(split, metric, all_mean, all_stdev)
                 logger.info(result_str)
                 fh.write(result_str + "\n")
-                final_results_dict[f"{metric}-all-p"] = all_mean
+                final_results_dict[f"{split}-{metric}-all-p"] = all_mean
 
     return final_results_dict
 

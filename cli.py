@@ -282,7 +282,7 @@ def main():
 
             else:
                 raise ValueError(f"Training method '{args.method}' not implemented")
-            
+
         except json.decoder.JSONDecodeError:
             warnings.warn("JSONDecodeError in transformers")
             pass
