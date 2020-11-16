@@ -285,7 +285,7 @@ def main():
 
         except json.decoder.JSONDecodeError:
             warnings.warn("JSONDecodeError in transformers")
-            pass
+            continue
 
         if final_results is not None and args.local_rank in [-1, 0]:
             if not wandb_initalized:
