@@ -23,7 +23,7 @@ if __name__ == "__main__":
         except FileExistsError:
             pass
         train_file_path = os.path.join("data", task_name, "train.jsonl")
-        test_file_path = os.path.join("data", task_name, "test.jsonl")
+        test_file_path = os.path.join("data", task_name, "val.jsonl")
         new_train_file_path = os.path.join("split_data", task_name, "train.jsonl")
         dev_file_path = os.path.join("split_data", task_name, "val.jsonl")
         new_test_file_path = os.path.join("split_data", task_name, "test.jsonl")
