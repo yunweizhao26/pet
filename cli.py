@@ -306,7 +306,7 @@ def naming_convention(args):
         verbalizer = "reverse"
     else:
         raise ValueError(f"unrecognized verbalizer file {args.verbalizer_file}")
-    name = f"{method} {model}" + (f" {verbalizer} verbalizer" if verbalizer is not None else "")
+    name = f"{method} {model}" + (f" {verbalizer} verbalizer" if verbalizer is not None else "") + f" rep {args.seed}"
     return name
 
 
