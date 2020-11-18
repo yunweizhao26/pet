@@ -245,7 +245,8 @@ class TransformerModelWrapper:
             adam_epsilon: float = 1e-8,
             warmup_steps=0,
             max_grad_norm: float = 1,
-            logging_steps: int = 50,
+            logging_steps: int = -1,
+            logging_number: int = 5,
             per_gpu_unlabeled_batch_size: int = 8,
             unlabeled_data: List[InputExample] = None,
             lm_training: bool = False,
@@ -320,6 +321,9 @@ class TransformerModelWrapper:
             )
 
         t_total = len(train_dataloader) // gradient_accumulation_steps * num_train_epochs
+
+        if logging_steps < 0:
+            logging_steps = t_total // logging_number
 
         # Prepare optimizer and schedule (linear warmup and decay)
         no_decay = ["bias", "LayerNorm.weight"]

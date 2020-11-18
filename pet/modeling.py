@@ -69,6 +69,8 @@ class TrainConfig(PetConfig):
         learning_rate: float = 5e-5,
         adam_epsilon: float = 1e-8,
         warmup_steps: int = 0,
+        logging_number: int = 5,
+        logging_steps: int = -1,
         max_grad_norm: float = 1,
         lm_training: bool = False,
         use_logits: bool = False,
@@ -111,6 +113,8 @@ class TrainConfig(PetConfig):
         self.learning_rate = learning_rate
         self.adam_epsilon = adam_epsilon
         self.warmup_steps = warmup_steps
+        self.logging_number = logging_number
+        self.logging_steps = logging_steps
         self.max_grad_norm = max_grad_norm
         self.lm_training = lm_training
         self.use_logits = use_logits
@@ -690,6 +694,8 @@ def train_single_model(
             adam_epsilon=config.adam_epsilon,
             warmup_steps=config.warmup_steps,
             max_grad_norm=config.max_grad_norm,
+            logging_steps=config.logging_steps,
+            logging_number=config.logging_number,
             unlabeled_data=unlabeled_data if config.lm_training or config.use_logits else None,
             lm_training=config.lm_training,
             use_logits=config.use_logits,
