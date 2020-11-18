@@ -130,7 +130,7 @@ class MnliProcessor(DataProcessor):
         return self._create_examples(MnliProcessor._read_tsv(os.path.join(data_dir, "dev_matched.tsv")), "dev_matched")
 
     def get_test_examples(self, data_dir) -> List[InputExample]:
-        raise NotImplementedError()
+        return self._create_examples(MnliProcessor._read_tsv(os.path.join(data_dir, "dev_mismatched.tsv")), "dev_mismatched")
 
     def get_unlabeled_examples(self, data_dir) -> List[InputExample]:
         return self.get_train_examples(data_dir)
