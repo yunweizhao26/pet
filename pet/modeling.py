@@ -512,8 +512,8 @@ def train_pet_ensemble(
             results_dict = {}
 
             shots = 0 if train_data is None else len(train_data)
-            pattern_iter_output_dir = "{}/{}shots-{}-i{}".format(
-                output_dir, shots, pattern_name(pattern_id), iteration
+            pattern_iter_output_dir = "{}/{}shots-{}-i{}-seed{}".format(
+                output_dir, shots, pattern_name(pattern_id), iteration, seed
             )
 
             if os.path.exists(pattern_iter_output_dir) and not overwrite_dir:
