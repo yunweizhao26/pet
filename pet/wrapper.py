@@ -429,13 +429,6 @@ class TransformerModelWrapper:
 
                         print(json.dumps({**logs, **{"step": accumulated_step}}))
 
-                if 0 < max_steps < accumulated_step:
-                    epoch_iterator.close()
-                    break
-            if 0 < max_steps < accumulated_step:
-                train_iterator.close()
-                break
-
         if eval_kwargs is not None:
             score = self.in_training_eval(eval_kwargs)
             if score > best_score:
