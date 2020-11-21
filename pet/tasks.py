@@ -529,8 +529,8 @@ class WscProcessor(DataProcessor):
                 meta["span1_index"], meta["span2_index"] = span1_index, span2_index
 
                 example = InputExample(guid=guid, text_a=text_a, label=label, meta=meta, idx=idx)
-                if set_type == "train" and label != "True":
-                    continue
+                # if set_type == "train" and label != "True":
+                #     continue
                 examples.append(example)
 
         return examples
