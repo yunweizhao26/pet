@@ -64,6 +64,8 @@ def load_pet_configs(args) -> Tuple[WrapperConfig, pet.TrainConfig, pet.EvalConf
         warmup_steps=args.warmup_steps,
         max_grad_norm=args.max_grad_norm,
         lm_training=args.lm_training,
+        logging_steps=args.logging_steps,
+        logging_number=args.logging_number,
         alpha=args.alpha,
         local_rank=args.local_rank,
     )
@@ -111,6 +113,8 @@ def load_sequence_classifier_configs(args) -> Tuple[WrapperConfig, pet.TrainConf
         learning_rate=args.learning_rate,
         adam_epsilon=args.adam_epsilon,
         warmup_steps=args.warmup_steps,
+        logging_steps=args.logging_steps,
+        logging_number=args.logging_number,
         max_grad_norm=args.max_grad_norm,
         use_logits=args.method != "sequence_classifier",
         local_rank=args.local_rank,
