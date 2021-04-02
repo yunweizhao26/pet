@@ -4,7 +4,7 @@ import pandas as pd
 import numpy as np
 from itertools import product
 import shapely
-from bokeh.models import Span, Label
+from bokeh.models import Span, Label, ColumnDataSource, Whisker
 from bokeh.plotting import figure, show
 from shapely.geometry import Polygon
 import matplotlib as mpl
@@ -80,7 +80,7 @@ def prompt_boolq(passage, question, pattern):
 
 def advantage_text(advantage):
     model_type = (
-        """<span style="color: #4B0082">Classifier</span>"""
+        """<span style="color: #4B0082">Head</span>"""
         if advantage < 0
         else """<span style="color: #daa520">Prompting</span>"""
     )
@@ -89,7 +89,7 @@ def advantage_text(advantage):
 
 def average_advantage_text(advantage):
     model_type = (
-        """<span style="color: #4B0082">classifier</span>"""
+        """<span style="color: #4B0082">head</span>"""
         if advantage < 0
         else """<span style="color: #daa520">prompting</span>"""
     )
@@ -115,7 +115,7 @@ def get_data(task):
     df = pd.read_csv(url)
     training_points = df["training_points"]
 
-    classifier_performances = np.transpose(np.array([df[naming_convention(task, i)] for i in range(task_reps[task])]))
+    head_performances = np.transpose(np.array([df[naming_convention(task, i)] for i in range(task_reps[task])]))
     pattern_performances = {}
     for pattern in task_patterns[task]:
         pattern_performances[pattern] = {
@@ -126,7 +126,7 @@ def get_data(task):
                 np.array([df[naming_convention(task, i, pattern, True)] for i in range(task_reps[task])])
             )
 
-    return training_points, classifier_performances, pattern_performances
+    return training_points, head_performances, pattern_performances
 
 
 def reduct(performances, reduction="accmax", final_pattern=0, verbalizer="normal", exclude=None):
@@ -255,8 +255,8 @@ def fill_polygon(fig, polygon, color, label=None, alpha=1.0):
 
 
 label_order = {
-    "classifier run": 0,
-    "classifier advantage": 1,
+    "head run": 0,
+    "head advantage": 1,
     "control run": 2,
     "optimization advantage": 3,
     "prompting run": 4,
@@ -296,12 +296,14 @@ def plot_polygons_bokeh(task, training_points, clf_results, pvp_results, clf_col
     middle_y = (full_range[0] + full_range[1]) / 2
 
     fig = figure(plot_height=400, plot_width=800, max_height=400, max_width=800,
-                 x_axis_type="log" if x_log_scale else "linear")
+                 x_axis_type="log" if x_log_scale else "linear", title="Performance over training subset sizes of head and prompting methods")
 
-    fig.circle(training_points, clf_results, color=clf_colors[0])
-    fig.circle(training_points, pvp_results, color=pvp_colors[0])
-    fig.line(training_points, clf_results, color=clf_colors[0], alpha=1, legend="classifier run")
-    fig.line(training_points, pvp_results, color=pvp_colors[0], alpha=1, legend="prompting run")
+    fig.circle(training_points, clf_results, color=clf_colors[0], legend="head run")
+    fig.circle(training_points, pvp_results, color=pvp_colors[0], legend="prompting run")
+    fig.line(training_points, clf_results, color=clf_colors[0], alpha=1)
+    fig.line(training_points, pvp_results, color=pvp_colors[0], alpha=1)
+    fig.xaxis.axis_label = "training subset size"
+    fig.yaxis.axis_label = task_metrics[task]
     fig.patch(
         [training_points[0], training_points[0], training_points[-1], training_points[-1]],
         [overlapping_range[0], overlapping_range[1], overlapping_range[1], overlapping_range[0]],
@@ -343,7 +345,7 @@ def plot_polygons_bokeh(task, training_points, clf_results, pvp_results, clf_col
     fill_polygon(fig, clf_outside_area, clf_colors[1], alpha=0.13)
     fill_polygon(fig, pvp_outside_area, pvp_colors[1], alpha=0.18)
     fill_polygon(
-        fig, clf_inside_area, clf_colors[1], alpha=0.4, label="classifier advantage" if task == "WiC" else None
+        fig, clf_inside_area, clf_colors[1], alpha=0.4, label="head advantage" if task == "WiC" else None
     )
     fill_polygon(fig, pvp_inside_area, pvp_colors[1], alpha=0.4, label="prompting advantage")
 
@@ -372,13 +374,15 @@ def plot_three_polygons_bokeh(
     middle_y = (full_range[0] + full_range[1]) / 2
 
     fig = figure(plot_height=400, plot_width=800, max_height=400, max_width=800,
-                 x_axis_type="log" if x_log_scale else "linear")
-    fig.circle(training_points, clf_results, color=clf_colors[0])
-    fig.circle(training_points, pvp_results, color=pvp_colors[0])
-    fig.circle(training_points, ctl_results, color=ctl_colors[0])
-    fig.line(training_points, clf_results, color=clf_colors[0], alpha=1, legend="classifier run")
-    fig.line(training_points, pvp_results, color=pvp_colors[0], alpha=1, legend="prompting run")
-    fig.line(training_points, ctl_results, color=ctl_colors[0], alpha=1, legend="null verbalizer run")
+                 x_axis_type="log" if x_log_scale else "linear", title="Performance over training subset sizes of head, prompting and prompting with a null verbalizer")
+    fig.xaxis.axis_label = "training subset size"
+    fig.yaxis.axis_label = task_metrics[task]
+    fig.circle(training_points, clf_results, color=clf_colors[0], legend="head run")
+    fig.circle(training_points, pvp_results, color=pvp_colors[0], legend="prompting run")
+    fig.circle(training_points, ctl_results, color=ctl_colors[0], legend="null verbalizer run")
+    fig.line(training_points, clf_results, color=clf_colors[0], alpha=1)
+    fig.line(training_points, pvp_results, color=pvp_colors[0], alpha=1)
+    fig.line(training_points, ctl_results, color=ctl_colors[0], alpha=1)
 
     fig.patch(
         [training_points[0], training_points[0], training_points[-1], training_points[-1]],
@@ -428,7 +432,7 @@ def plot_three_polygons_bokeh(
     ctl_outside_area = (full_ctl_polygon.difference(full_clf_polygon)).difference(pvp_inside_area)
 
     fill_polygon(
-        fig, clf_inside_area, clf_colors[1], alpha=0.4, label="classifier advantage" if task == "WiC" else None
+        fig, clf_inside_area, clf_colors[1], alpha=0.4, label="head advantage" if task == "WiC" else None
     )
     fill_polygon(fig, pvp_inside_area, pvp_colors[1], alpha=0.4, label="prompting advantage")
     fill_polygon(fig, ctl_inside_area, ctl_colors[1], alpha=0.4, label="null verbalizer advantage")
@@ -450,6 +454,51 @@ def plot_three_polygons_bokeh(
     fig.legend.location = "bottom_right"
 
     return fig
+
+
+def pattern_graph(task):
+    fig = figure(plot_height=400, plot_width=800, max_height=400, max_width=800, x_axis_type="log", title="Performance over training subset sizes of different prompt patterns")
+    fig.xaxis.axis_label = "training subset size"
+    fig.yaxis.axis_label = task_metrics[task]
+    url = f"https://raw.githubusercontent.com/TevenLeScao/pet/master/exported_results/{task.lower()}/wandb_export.csv"
+    df = pd.read_csv(url)
+    expanded_training_points = np.array(list(df["training_points"]) * task_reps[task] * len(task_patterns[task]))
+    data = np.array(df[[naming_convention(task, seed, pattern) for pattern in task_patterns[task] for seed in
+                        range(task_reps[task])]])
+    data = data.reshape(-1, task_reps[task])
+    col_med = np.nanmean(data, axis=1)
+    # Find indices that you need to replace
+    inds = np.where(np.isnan(data))
+    # Place column means in the indices. Align the arrays using take
+    data[inds] = np.take(col_med, inds[0])
+    data = data.reshape(len(df["training_points"]), -1)
+    data = data.transpose().reshape(-1)
+    data = data + np.random.normal(0, 0.01, len(data))
+    pattern = np.array([i // (len(data) // len(task_patterns[task])) for i in range(len(data))])
+    seed = np.array([0, 1, 2, 3] * (len(data) // task_reps[task]))
+    long_df = pd.DataFrame(np.stack((expanded_training_points, pattern, seed, data), axis=1),
+                           columns=["training_points", "pattern", "seed", task_metrics[task]])
+    long_df['pattern'] = long_df['pattern'].astype(int).astype(str)
+    gby_pattern = long_df.groupby('pattern')
+    pattern_colors = ["royalblue", "darkturquoise", "darkviolet"]
+
+    for i, (pattern, pattern_df) in enumerate(gby_pattern):
+        gby_training_points = pattern_df.groupby('training_points')
+        x = [training_point for training_point, training_point_df in gby_training_points]
+        y_max = list([np.max(training_point_df[task_metrics[task]]) for training_point, training_point_df in gby_training_points])
+        y_min = list([np.min(training_point_df[task_metrics[task]]) for training_point, training_point_df in gby_training_points])
+        y = list([np.median(training_point_df[task_metrics[task]]) for training_point, training_point_df in gby_training_points])
+        fig.circle(x, y, color=pattern_colors[i], alpha=1, legend=f"Pattern {i}")
+        fig.line(x, y, color=pattern_colors[i], alpha=1)
+        fig.varea(x=x, y1=y_max, y2=y_min, color=pattern_colors[i], alpha=0.11)
+        # source = ColumnDataSource(data=dict(base=x, lower=y_min, upper=y_max))
+        # w = Whisker(source=source, base="base", upper="upper", lower="lower", line_color=pattern_colors[i], line_alpha=0.3)
+        # w.upper_head.line_color = pattern_colors[i]
+        # w.lower_head.line_color = pattern_colors[i]
+        # fig.add_layout(w)
+
+    return fig
+
 
 
 def cubic_easing(t):
