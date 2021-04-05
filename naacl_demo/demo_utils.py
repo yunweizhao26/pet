@@ -1,15 +1,11 @@
 import math
 
-import pandas as pd
 import numpy as np
-from itertools import product
+import pandas as pd
 import shapely
-from bokeh.models import Span, Label, ColumnDataSource, Whisker
-from bokeh.plotting import figure, show
+from bokeh.models import Span, Label
+from bokeh.plotting import figure
 from shapely.geometry import Polygon
-import matplotlib as mpl
-import matplotlib.pyplot as plt
-import seaborn
 
 task_patterns = {
     "CB": [0, 3],
