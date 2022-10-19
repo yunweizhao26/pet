@@ -776,7 +776,7 @@ class RecordProcessor(DataProcessor):
 
 
 PROCESSORS = {
-    "mnli": MnliProcessor,
+    # "mnli": MnliProcessor,
     "mnli-mm": MnliMismatchedProcessor,
     "agnews": AgnewsProcessor,
     "yahoo": YahooAnswersProcessor,

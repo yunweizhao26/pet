@@ -4,7 +4,7 @@ python3 cli.py \
 --data_dir data/ \
 --model_type roberta \
 --model_name_or_path roberta-large \
---task_name mnli \
+--task_name rte \
 --output_dir experiments/[TASK_NAME]/roberta/supervised \
 --do_train \
 --do_eval \
@@ -21,7 +21,7 @@ python3 cli.py \
 --sc_num_train_epochs 5 \
 --sc_max_seq_length 256 \
 --sc_repetitions 1 \
---train_examples 5 10 50 100 \
+--train_examples 32 \
 --logging_steps 25 \
 --overwrite_output_dir \
 --no_distillation

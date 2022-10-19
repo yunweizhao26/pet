@@ -1,8 +1,8 @@
 import os
 import random
 import shutil
-
-TASK_DEV_SIZES = {"boolq": 500, "cb": 50, "copa": 50, "multirc": 50, "record": 7500, "rte": 250, "wic": 100, "wsc": 50}
+# "record": 7500
+TASK_DEV_SIZES = {"boolq": 500, "cb": 50, "copa": 50, "multirc": 50, "rte": 250, "wic": 100, "wsc": 50}
 
 
 def file_len(fname):

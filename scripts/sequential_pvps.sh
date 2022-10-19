@@ -1,11 +1,11 @@
 python3 cli.py \
   --method pet \
-  --pattern_ids 0 \
+  --pattern_ids 9 \
   --data_dir split_data/ \
   --model_type roberta \
   --model_name_or_path roberta-large \
-  --task_name mnli \
-  --output_dir experiments/[TASK_NAME]/roberta/supervised \
+  --task_name rte \
+  --output_dir experiments/[TASK_NAME]/roberta/ \
   --do_train \
   --do_eval \
   --do_test \
@@ -25,8 +25,9 @@ python3 cli.py \
   --sc_max_steps 2000 \
   --sc_max_seq_length 256 \
   --sc_repetitions 1 \
-  --train_examples 5 10 20 50 100 200 500 1000 2000 5000 10000 20000 \
+  --train_examples 32 \
   --warmup_steps 50 \
   --logging_steps 50 \
   --overwrite_output_dir \
+  --seed 42 \
   --no_distillation

@@ -4,7 +4,7 @@ python3 cli.py \
   --data_dir split_data/ \
   --model_type roberta \
   --model_name_or_path roberta-large \
-  --task_name copa \
+  --task_name rte \
   --output_dir experiments/[TASK_NAME]/roberta/supervised \
   --do_train \
   --do_eval \
@@ -25,7 +25,7 @@ python3 cli.py \
   --sc_max_steps 2000 \
   --sc_max_seq_length 256 \
   --sc_repetitions 1 \
-  --train_examples 10 \
+  --train_examples 32 \
   --warmup_steps 50 \
   --logging_steps 50 \
   --overwrite_output_dir \

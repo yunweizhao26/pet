@@ -405,9 +405,19 @@ class RtePVP(PVP):
             return [text_b, "?"], [self.mask, ".", text_a]
         elif self.pattern_id == 4:
             return [text_a, " question: ", self.shortenable(example.text_b), " True or False? answer:", self.mask], []
+        elif self.pattern_id == 5:
+            return ["Given that ", '"', text_a, '", '], ["we know that ", '"', text_b, '"', " is ", self.mask]
+        elif self.pattern_id == 6:
+            return ["The fact is ", '"', text_a, '", '], ["we know that ", '"', text_b, '"', " is ", self.mask]
+        elif self.pattern_id == 7:
+            return ["Given that ", self.shortenable(example.text_a.rstrip(string.punctuation)), ", "], ["we know that ", text_b, " is ", self.mask]
+        elif self.pattern_id == 8:
+            return ["The fact is ", self.shortenable(example.text_a.rstrip(string.punctuation)), ", "], ["we know that ", text_b, " is ", self.mask]
+        elif self.pattern_id == 9:
+            return [self.shortenable(example.text_a.rstrip(string.punctuation)), " means that ", self.shortenable(example.text_b), " True or False? answer:", self.mask], []
 
     def verbalize(self, label) -> List[str]:
-        if self.pattern_id == 4:
+        if self.pattern_id in [4, 9]:
             return ["true"] if label == "entailment" else ["false"]
         return RtePVP.VERBALIZER[label]
 
