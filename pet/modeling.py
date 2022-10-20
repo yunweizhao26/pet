@@ -586,9 +586,9 @@ def train_pet_ensemble(
 
                     if local_rank in [-1, 0]:
                         save_predictions(
-                            os.path.join(pattern_iter_output_dir, "predictions.jsonl"), wrapper, eval_result
+                            os.path.join(pattern_iter_output_dir, f"{split}_predictions.jsonl"), wrapper, eval_result
                         )
-                        save_logits(os.path.join(pattern_iter_output_dir, "eval_logits.txt"), eval_result["logits"])
+                        save_logits(os.path.join(pattern_iter_output_dir, f"{split}_eval_logits.txt"), eval_result["logits"])
 
                     scores = eval_result["scores"]
                     logger.info("--- {} result (pattern_id={}, iteration={}) ---".format(split, pattern_id, iteration))
