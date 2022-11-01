@@ -1,5 +1,6 @@
 #!/bin/bash
-for model in roberta-large
+model="microsoft\deberta-v3-large"
+for seed in 0 23 42
 do
   for id in {0..26}
   do
@@ -7,7 +8,7 @@ do
       --method pet \
       --pattern_ids $id \
       --data_dir split_data/ \
-      --model_typet \
+      --model_type roberta\
       --model_name_or_path $model \
       --task_name rte \
       --output_dir experiments/[TASK_NAME]/$model/supervised \
@@ -34,9 +35,9 @@ do
       --warmup_steps 50 \
       --logging_steps 50 \
       --overwrite_output_dir \
-      --seed 42 \
+      --seed $seed \
       --cache_dir ~/../../../gscratch/cse/yunwei/cache/ \
-      --wrapper_type plm \
+      --wrapper_type mlm \
       --no_distillation
   done
 done
