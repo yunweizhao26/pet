@@ -9,4 +9,4 @@ You may run a _prompted_ experiment with `.scripts/sequential_pvps.sh` and a _he
 Originally forked from https://github.com/timoschick/pet.
 
 
-srun -p gpu-rtx6k -A h2lab --time 1:00:00 -n 1 --mem=32G --gpus=1 --pty /bin/bash
+srun -p gpu-rtx6k -A h2lab --time 24:00:00 -n 1 --mem=64G --gpus=1 --pty /bin/bash

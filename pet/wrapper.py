@@ -29,6 +29,11 @@ from tqdm import trange, tqdm
 from transformers import (
     InputExample,
     AdamW,
+    AutoConfig,
+    AutoTokenizer,
+    AutoModelForSequenceClassification,
+    AutoModelForMaskedLM,
+    AutoModelForSeq2SeqLM,
     get_linear_schedule_with_warmup,
     PreTrainedTokenizer,
     BertForMaskedLM,
@@ -44,6 +49,10 @@ from transformers import (
     RobertaConfig,
     RobertaForSequenceClassification,
     RobertaTokenizer,
+    DebertaV2Config,
+    DebertaV2Tokenizer,
+    DebertaV2ForSequenceClassification,
+    DebertaV2ForMaskedLM,
     XLMRobertaConfig,
     XLMRobertaForSequenceClassification,
     XLMRobertaTokenizer,
@@ -54,6 +63,9 @@ from transformers import (
     GPT2Config,
     GPT2LMHeadModel,
     GPT2Tokenizer,
+    T5Config,
+    T5Tokenizer,
+    T5ForConditionalGeneration,
 )
 from transformers import __version__ as transformers_version
 from transformers.data.metrics import simple_accuracy
@@ -91,6 +103,23 @@ MODEL_CLASSES = {
         SEQUENCE_CLASSIFIER_WRAPPER: RobertaForSequenceClassification,
         MLM_WRAPPER: RobertaForMaskedLM,
     },
+    "deberta": {
+        "config": DebertaV2Config,
+        "tokenizer": DebertaV2Tokenizer,
+        SEQUENCE_CLASSIFIER_WRAPPER: DebertaV2ForSequenceClassification,
+        MLM_WRAPPER: DebertaV2ForMaskedLM,
+    },
+    "deberta-v3": {
+        "config": AutoConfig,
+        "tokenizer": AutoTokenizer,
+        SEQUENCE_CLASSIFIER_WRAPPER: AutoModelForSequenceClassification,
+        MLM_WRAPPER: AutoModelForMaskedLM,
+    },
+    "t5": {
+        "config": T5Config,
+        "tokenizer": T5Tokenizer,
+        PLM_WRAPPER: AutoModelForSeq2SeqLM,
+    },
     "xlm-roberta": {
         "config": XLMRobertaConfig,
         "tokenizer": XLMRobertaTokenizer,
@@ -109,7 +138,11 @@ MODEL_CLASSES = {
         SEQUENCE_CLASSIFIER_WRAPPER: AlbertForSequenceClassification,
         MLM_WRAPPER: AlbertForMaskedLM,
     },
-    "gpt2": {"config": GPT2Config, "tokenizer": GPT2Tokenizer, MLM_WRAPPER: GPT2LMHeadModel},
+    "gpt2": {
+        "config": GPT2Config,
+        "tokenizer": GPT2Tokenizer,
+        MLM_WRAPPER: GPT2LMHeadModel
+    },
 }
 
 EVALUATION_STEP_FUNCTIONS = {

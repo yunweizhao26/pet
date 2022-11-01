@@ -1,0 +1,1 @@
+{"py/object": "pet.wrapper.WrapperConfig", "model_type": "deberta-v3", "model_name_or_path": "microsoft/deberta-v3-large", "wrapper_type": "mlm", "task_name": "rte", "max_seq_length": 256, "label_list": ["entailment", "not_entailment"], "pattern_id": 4, "verbalizer_file": null, "cache_dir": "", "loggers_initialized": false}

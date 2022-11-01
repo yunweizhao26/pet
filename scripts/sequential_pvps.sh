@@ -1,13 +1,13 @@
 #!/bin/bash
-for model in roberta-large roberta-base
+for model in xlnet-base-cased xlnet-large-cased
 do
-  for id in 3 4 5 6 7 8 9
+  for id in 0 1 2 3 4 5 6 7 8 9
   do
     python3 cli.py \
       --method pet \
       --pattern_ids $id \
       --data_dir split_data/ \
-      --model_type roberta \
+      --model_type xlnet \
       --model_name_or_path $model \
       --task_name rte \
       --output_dir experiments/[TASK_NAME]/$model/supervised \
@@ -35,6 +35,8 @@ do
       --logging_steps 50 \
       --overwrite_output_dir \
       --seed 42 \
+      --cache_dir ~/../../../gscratch/cse/yunwei/cache/ \
+      --wrapper_type plm \
       --no_distillation
   done
 done

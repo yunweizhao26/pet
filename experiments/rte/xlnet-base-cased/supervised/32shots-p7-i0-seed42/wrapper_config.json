@@ -1,0 +1,1 @@
+{"py/object": "pet.wrapper.WrapperConfig", "model_type": "xlnet", "model_name_or_path": "xlnet-base-cased", "wrapper_type": "plm", "task_name": "rte", "max_seq_length": 256, "label_list": ["entailment", "not_entailment"], "pattern_id": 7, "verbalizer_file": null, "cache_dir": "/mmfs1/home/yzhao4/../../../gscratch/cse/yunwei/cache/", "loggers_initialized": false}
