@@ -1,7 +1,7 @@
 #!/bin/bash
-for model in xlnet-base-cased xlnet-large-cased
+for model in roberta-large
 do
-  for id in 0 1 2 3 4 5 6 7 8 9
+  for id in {0..26}
   do
     python cli.py \
       --method pet \
