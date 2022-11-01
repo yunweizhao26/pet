@@ -395,26 +395,57 @@ class RtePVP(PVP):
         text_a = self.shortenable(example.text_a)
         text_b = self.shortenable(example.text_b.rstrip(string.punctuation))
 
-        if self.pattern_id == 0:
-            return ['"', text_b, '" ?'], [self.mask, ', "', text_a, '"']
-        elif self.pattern_id == 1:
-            return [text_b, "?"], [self.mask, ",", text_a]
-        if self.pattern_id == 2:
-            return ['"', text_b, '" ?'], [self.mask, '. "', text_a, '"']
-        elif self.pattern_id == 3:
-            return [text_b, "?"], [self.mask, ".", text_a]
-        elif self.pattern_id == 4:
-            return [text_a, " question: ", self.shortenable(example.text_b), " True or False? answer:", self.mask], []
-        elif self.pattern_id == 5:
-            return ["Given that ", '"', text_a, '", '], ["we know that ", '"', text_b, '"', " is ", self.mask]
-        elif self.pattern_id == 6:
-            return ["The fact is ", '"', text_a, '", '], ["we know that ", '"', text_b, '"', " is ", self.mask]
-        elif self.pattern_id == 7:
-            return ["Given that ", self.shortenable(example.text_a.rstrip(string.punctuation)), ", "], ["we know that ", text_b, " is ", self.mask]
-        elif self.pattern_id == 8:
-            return ["The fact is ", self.shortenable(example.text_a.rstrip(string.punctuation)), ", "], ["we know that ", text_b, " is ", self.mask]
-        elif self.pattern_id == 9:
-            return [self.shortenable(example.text_a.rstrip(string.punctuation)), " means that ", self.shortenable(example.text_b), " True or False? answer:", self.mask], []
+        template_combs = [
+            ([text_a, " Using only the above description and what you know about the world, "], ['"', text_b, '" is definitely correct. Yes or no?', self.mask]),
+            ([text_a], ["\nquestion: ", text_b, "Yes or no?\nanswer:", self.mask]),
+            ([text_a], [' Are we justified in saying that "', text_b, '"?', self.mask]),
+            (["Given ", text_a], [' Should we assume that "', text_b, '" is true?', self.mask]),
+            ([text_a, " Based on the previous passage, "], ["is it true that ", '"', text_b, '"?', self.mask]),
+            (["Given ", text_a], [" Is it guaranteed true that ", '"', text_b, '"?', self.mask]),
+            (['Suppose ', text_a], [" Can we infer that ", '"', text_b, '"?', self.mask]),
+            (['Given that ', text_a], ["Does it follow that ", '"', text_b, '"?', self.mask]),
+            ([text_a], [" Question: Does this imply that ", '"', text_b, '"?', self.mask]),
+            (['Given that ', text_a], [' Therefore, it must be true that ', '"', text_b, '"?', self.mask]),
+            ([text_a], [' Do most of the above words appear in the following passage? ', text_b, self.mask]),
+            ([text_a], [' Are there lots of similar words in ', '"', text_b, '"?', self.mask]),
+            ([text_a], [' Does that have the same meaning as ', '"', text_b, '"?', self.mask]),
+            ([text_a], [' Can that be paraphrased as: ', '"', text_b, '"?', self.mask]),
+            ([text_a], [' Can that be summarized as ', '"', text_b, '"?', self.mask]),
+            ([text_a], [' Does the paragraph start with "the"? ', text_b, self.mask]),
+            ([text_a], [' Is this grammatically correct? ', text_b, self.mask]),
+            ([text_a], [' Is the sentiment positive? ', text_b, self.mask]),
+            ([text_a], [' Is this a sports news? ', text_b, self.mask]),
+            ([text_a], [' Is this French? ', text_b, self.mask]),
+            ([text_a], [' Single-family zoning is bad for American cities. ', '"', text_b, '"?', self.mask]),
+            ([text_a], [' When Bolyai sent Gauss his discovery of non-Euclidean geometry, Gauss replied that he arrived at the same results 30 years ago. "', text_b, '"?', self.mask]),
+            ([text_a], [' If bonito flakes boil more than a few seconds, the stock becomes too strong? "', text_b, '"?', self.mask]),
+            ([text_a], [' Inflections are annoying and thank god that Middle English got rid of most of them. "', text_b, '"?', self.mask]),
+            ([text_a], [' Is the pious loved by the gods because it is pious? Or is it pious because it is loved by the gods? ', text_b, '"?', self.mask]),
+            ([text_b], [self.mask, text_a]),
+            ([text_a], [self.mask, text_b])
+        ]
+
+        return template_combs[self.pattern_id][0], template_combs[self.pattern_id][1]
+        # if self.pattern_id == 0:
+        #     return ['"', text_b, '" ?'], [self.mask, ', "', text_a, '"']
+        # elif self.pattern_id == 1:
+        #     return [text_b, "?"], [self.mask, ",", text_a]
+        # if self.pattern_id == 2:
+        #     return ['"', text_b, '" ?'], [self.mask, '. "', text_a, '"']
+        # elif self.pattern_id == 3:
+        #     return [text_b, "?"], [self.mask, ".", text_a]
+        # elif self.pattern_id == 4:
+        #     return [text_a, " question: ", self.shortenable(example.text_b), " True or False? answer:", self.mask], []
+        # elif self.pattern_id == 5:
+        #     return ["Given that ", '"', text_a, '", '], ["we know that ", '"', text_b, '"', " is ", self.mask]
+        # elif self.pattern_id == 6:
+        #     return ["The fact is ", '"', text_a, '", '], ["we know that ", '"', text_b, '"', " is ", self.mask]
+        # elif self.pattern_id == 7:
+        #     return ["Given that ", self.shortenable(example.text_a.rstrip(string.punctuation)), ", "], ["we know that ", text_b, " is ", self.mask]
+        # elif self.pattern_id == 8:
+        #     return ["The fact is ", self.shortenable(example.text_a.rstrip(string.punctuation)), ", "], ["we know that ", text_b, " is ", self.mask]
+        # elif self.pattern_id == 9:
+        #     return [self.shortenable(example.text_a.rstrip(string.punctuation)), " means that ", self.shortenable(example.text_b), " True or False? answer:", self.mask], []
 
     def verbalize(self, label) -> List[str]:
         if self.pattern_id in [4, 9]:

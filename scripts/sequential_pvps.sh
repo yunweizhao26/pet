@@ -3,11 +3,11 @@ for model in xlnet-base-cased xlnet-large-cased
 do
   for id in 0 1 2 3 4 5 6 7 8 9
   do
-    python3 cli.py \
+    python cli.py \
       --method pet \
       --pattern_ids $id \
       --data_dir split_data/ \
-      --model_type xlnet \
+      --model_typet \
       --model_name_or_path $model \
       --task_name rte \
       --output_dir experiments/[TASK_NAME]/$model/supervised \
