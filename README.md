@@ -1,9 +1,8 @@
-# How many data points is a prompt worth?
+Comparisons and evaluations of few-shot fine-tuning with in-context learning with 27 handcrafted prompts. We choose tasks and datasets as follows:
+- entailment: MNLI, RTE, CB
+- multiple choice QA: BoolQ, MultiRC
+- commonsense reasoning: WSC, COPA, WiC
 
-This is companion code for our NAACL 2021 paper, "How many data points is a prompt worth?". Check out our [interactive blog post](https://huggingface.co/blog/how_many_data_points/) and [paper](https://arxiv.org/abs/2103.08493) for more details.
+prompts-across-models branch includes codebase for getting experiment results with few-shot finetuning and in-context learning. We did more than 5000 experiments for evaluation.
 
-You should place your MNLI/SuperGLUE data in `data` in folders named after each task. For SuperGLUE data, run `python superglue_data_splitting` first in order to have a dev/test split.
-
-You may run a _prompted_ experiment with `.scripts/sequential_pvps.sh` and a _head_ experiment with `.scripts/sequential_supervised.sh`. Modify those scripts to change the SuperGLUE task you wish to train on.
-
-Originally forked from https://github.com/timoschick/pet.
+Test branch includes codebase for analysis. We did comparison the two methods using four correlation metrics and built correlation table for each experiment setup. Summaries of the results can be found in experiments/summary folder.
