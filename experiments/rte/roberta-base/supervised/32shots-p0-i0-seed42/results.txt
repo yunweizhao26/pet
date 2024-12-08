@@ -1,1 +1,1 @@
-{'global_step': 250, 'average_loss': 0.07706499489767224}
+{'global_step': 250, 'average_loss': 0.11236535311468461}

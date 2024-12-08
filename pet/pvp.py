@@ -326,10 +326,45 @@ class MnliPVP(PVP):
         text_a = self.shortenable(self.remove_final_punc(example.text_a))
         text_b = self.shortenable(example.text_b)
 
-        if self.pattern_id == 0 or self.pattern_id == 2:
-            return ['"', text_a, '" ?'], [self.mask, ', "', text_b, '"']
-        elif self.pattern_id == 1 or self.pattern_id == 3:
-            return [text_a, "?"], [self.mask, ",", text_b]
+        template_combs = [
+            ([text_a, " Using only the above description and what you know about the world, "],
+             ['"', text_b, '" is definitely correct. Yes or no?', self.mask]),
+            ([text_a], ["\nquestion: ", text_b, "Yes or no?\nanswer:", self.mask]),
+            ([text_a], [' Are we justified in saying that "', text_b, '"?', self.mask]),
+            (["Given ", text_a], [' Should we assume that "', text_b, '" is true?', self.mask]),
+            ([text_a, " Based on the previous passage, "], ["is it true that ", '"', text_b, '"?', self.mask]),
+            (["Given ", text_a], [" Is it guaranteed true that ", '"', text_b, '"?', self.mask]),
+            (['Suppose ', text_a], [" Can we infer that ", '"', text_b, '"?', self.mask]),
+            (['Given that ', text_a], ["Does it follow that ", '"', text_b, '"?', self.mask]),
+            ([text_a], [" Question: Does this imply that ", '"', text_b, '"?', self.mask]),
+            (['Given that ', text_a], [' Therefore, it must be true that ', '"', text_b, '"?', self.mask]),
+            ([text_a], [' Do most of the above words appear in the following passage? ', text_b, self.mask]),
+            ([text_a], [' Are there lots of similar words in ', '"', text_b, '"?', self.mask]),
+            ([text_a], [' Does that have the same meaning as ', '"', text_b, '"?', self.mask]),
+            ([text_a], [' Can that be paraphrased as: ', '"', text_b, '"?', self.mask]),
+            ([text_a], [' Can that be summarized as ', '"', text_b, '"?', self.mask]),
+            ([text_a], [' Does the paragraph start with "the"? ', text_b, self.mask]),
+            ([text_a], [' Is this grammatically correct? ', text_b, self.mask]),
+            ([text_a], [' Is the sentiment positive? ', text_b, self.mask]),
+            ([text_a], [' Is this a sports news? ', text_b, self.mask]),
+            ([text_a], [' Is this French? ', text_b, self.mask]),
+            ([text_a], [' Single-family zoning is bad for American cities. ', '"', text_b, '"?', self.mask]),
+            ([text_a], [
+                ' When Bolyai sent Gauss his discovery of non-Euclidean geometry, Gauss replied that he arrived at the same results 30 years ago. "',
+                text_b, '"?', self.mask]),
+            ([text_a], [' If bonito flakes boil more than a few seconds, the stock becomes too strong? "', text_b, '"?',
+                        self.mask]),
+            ([text_a],
+             [' Inflections are annoying and thank god that Middle English got rid of most of them. "', text_b, '"?',
+              self.mask]),
+            ([text_a],
+             [' Is the pious loved by the gods because it is pious? Or is it pious because it is loved by the gods? ',
+              text_b, '"?', self.mask]),
+            ([text_b], [self.mask, text_a]),
+            ([text_a], [self.mask, text_b])
+        ]
+
+        return template_combs[self.pattern_id][0], template_combs[self.pattern_id][1]
 
     def verbalize(self, label) -> List[str]:
         if self.pattern_id == 0 or self.pattern_id == 1:
@@ -457,11 +492,50 @@ class CbPVP(RtePVP):
     VERBALIZER = {"contradiction": ["No"], "entailment": ["Yes"], "neutral": ["Maybe"]}
 
     def get_parts(self, example: InputExample) -> FilledPattern:
-        if self.pattern_id == 4:
-            text_a = self.shortenable(example.text_a)
-            text_b = self.shortenable(example.text_b)
-            return [text_a, " question: ", text_b, " true, false or neither? answer:", self.mask], []
-        return super().get_parts(example)
+        text_a = self.shortenable(example.text_a)
+        text_b = self.shortenable(example.text_b)
+        template_combs = [
+            ([text_a, " Using only the above description and what you know about the world, "],
+             ['"', text_b, '" is definitely correct. Yes or no?', self.mask]),
+            ([text_a], ["\nquestion: ", text_b, "Yes or no?\nanswer:", self.mask]),
+            ([text_a], [' Are we justified in saying that "', text_b, '"?', self.mask]),
+            (["Given ", text_a], [' Should we assume that "', text_b, '" is true?', self.mask]),
+            ([text_a, " Based on the previous passage, "], ["is it true that ", '"', text_b, '"?', self.mask]),
+            (["Given ", text_a], [" Is it guaranteed true that ", '"', text_b, '"?', self.mask]),
+            (['Suppose ', text_a], [" Can we infer that ", '"', text_b, '"?', self.mask]),
+            (['Given that ', text_a], ["Does it follow that ", '"', text_b, '"?', self.mask]),
+            ([text_a], [" Question: Does this imply that ", '"', text_b, '"?', self.mask]),
+            (['Given that ', text_a], [' Therefore, it must be true that ', '"', text_b, '"?', self.mask]),
+            ([text_a], [' Do most of the above words appear in the following passage? ', text_b, self.mask]),
+            ([text_a], [' Are there lots of similar words in ', '"', text_b, '"?', self.mask]),
+            ([text_a], [' Does that have the same meaning as ', '"', text_b, '"?', self.mask]),
+            ([text_a], [' Can that be paraphrased as: ', '"', text_b, '"?', self.mask]),
+            ([text_a], [' Can that be summarized as ', '"', text_b, '"?', self.mask]),
+            ([text_a], [' Does the paragraph start with "the"? ', text_b, self.mask]),
+            ([text_a], [' Is this grammatically correct? ', text_b, self.mask]),
+            ([text_a], [' Is the sentiment positive? ', text_b, self.mask]),
+            ([text_a], [' Is this a sports news? ', text_b, self.mask]),
+            ([text_a], [' Is this French? ', text_b, self.mask]),
+            ([text_a], [' Single-family zoning is bad for American cities. ', '"', text_b, '"?', self.mask]),
+            ([text_a], [
+                ' When Bolyai sent Gauss his discovery of non-Euclidean geometry, Gauss replied that he arrived at the same results 30 years ago. "',
+                text_b, '"?', self.mask]),
+            ([text_a],
+             [' If bonito flakes boil more than a few seconds, the stock becomes too strong? "', text_b, '"?',
+              self.mask]),
+            ([text_a],
+             [' Inflections are annoying and thank god that Middle English got rid of most of them. "', text_b,
+              '"?',
+              self.mask]),
+            ([text_a],
+             [
+                 ' Is the pious loved by the gods because it is pious? Or is it pious because it is loved by the gods? ',
+                 text_b, '"?', self.mask]),
+            ([text_b], [self.mask, text_a]),
+            ([text_a], [self.mask, text_b])
+        ]
+
+        return template_combs[self.pattern_id][0], template_combs[self.pattern_id][1]
 
     def verbalize(self, label) -> List[str]:
         if self.pattern_id == 4:
@@ -512,16 +586,45 @@ class WscPVP(PVP):
         num_masks = len(get_verbalization_ids(target, self.wrapper.tokenizer, force_single_token=False)) + num_pad
         masks = self.mask * num_masks
 
-        if self.pattern_id == 0:
-            return [text_a, "The pronoun '*" + pronoun + "*' refers to", masks + "."], []
-        elif self.pattern_id == 1:
-            return [text_a, "In the previous sentence, the pronoun '*" + pronoun + "*' refers to", masks + "."], []
-        elif self.pattern_id == 2:
-            return [
-                text_a,
-                "Question: In the passage above, what does the pronoun '*" + pronoun + "*' refer to? Answer: ",
-                masks + ".",
-            ], []
+        template_combs = [
+            ([text_a, " Using only the above description and what you know about the world, "],
+             ['"', pronoun, '" is definitely correct. Yes or no?', masks]),
+            ([text_a], ["\nquestion: ", pronoun, "Yes or no?\nanswer:", masks]),
+            ([text_a], [' Are we justified in saying that "', pronoun, '"?', masks]),
+            (["Given ", text_a], [' Should we assume that "', pronoun, '" is true?', masks]),
+            ([text_a, " Based on the previous passage, "], ["is it true that ", '"', pronoun, '"?', masks]),
+            (["Given ", text_a], [" Is it guaranteed true that ", '"', pronoun, '"?', masks]),
+            (['Suppose ', text_a], [" Can we infer that ", '"', pronoun, '"?', masks]),
+            (['Given that ', text_a], ["Does it follow that ", '"', pronoun, '"?', masks]),
+            ([text_a], [" Question: Does this imply that ", '"', pronoun, '"?', masks]),
+            (['Given that ', text_a], [' Therefore, it must be true that ', '"', pronoun, '"?', masks]),
+            ([text_a], [' Do most of the above words appear in the following passage? ', pronoun, masks]),
+            ([text_a], [' Are there lots of similar words in ', '"', pronoun, '"?', masks]),
+            ([text_a], [' Does that have the same meaning as ', '"', pronoun, '"?', masks]),
+            ([text_a], [' Can that be paraphrased as: ', '"', pronoun, '"?', masks]),
+            ([text_a], [' Can that be summarized as ', '"', pronoun, '"?', masks]),
+            ([text_a], [' Does the paragraph start with "the"? ', pronoun, masks]),
+            ([text_a], [' Is this grammatically correct? ', pronoun, masks]),
+            ([text_a], [' Is the sentiment positive? ', pronoun, masks]),
+            ([text_a], [' Is this a sports news? ', pronoun, masks]),
+            ([text_a], [' Is this French? ', pronoun, masks]),
+            ([text_a], [' Single-family zoning is bad for American cities. ', '"', pronoun, '"?', masks]),
+            ([text_a], [
+                ' When Bolyai sent Gauss his discovery of non-Euclidean geometry, Gauss replied that he arrived at the same results 30 years ago. "',
+                pronoun, '"?', masks]),
+            ([text_a], [' If bonito flakes boil more than a few seconds, the stock becomes too strong? "', pronoun, '"?',
+                        masks]),
+            ([text_a],
+             [' Inflections are annoying and thank god that Middle English got rid of most of them. "', pronoun, '"?',
+              masks]),
+            ([text_a],
+             [' Is the pious loved by the gods because it is pious? Or is it pious because it is loved by the gods? ',
+              pronoun, '"?', masks]),
+            ([pronoun], [masks, text_a]),
+            ([text_a], [masks, pronoun])
+        ]
+
+        return template_combs[self.pattern_id][0], template_combs[self.pattern_id][1]
 
     def verbalize(self, label) -> List[str]:
         return []
@@ -533,18 +636,51 @@ class BoolQPVP(PVP):
     VERBALIZER_B = {"False": ["false"], "True": ["true"]}
 
     def get_parts(self, example: InputExample) -> FilledPattern:
-        passage = self.shortenable(example.text_a)
-        question = self.shortenable(example.text_b)
+        text_a = self.shortenable(example.text_a)
+        text_b = self.shortenable(example.text_b)
 
-        if self.pattern_id < 2:
-            return [passage, ". Question: ", question, "? Answer: ", self.mask, "."], []
-        elif self.pattern_id < 4:
-            return [passage, ". Based on the previous passage, ", question, "?", self.mask, "."], []
-        else:
-            return ["Based on the following passage, ", question, "?", self.mask, ".", passage], []
+        template_combs = [
+            ([text_a, " Using only the above description and what you know about the world, "],
+             ['"', text_b, '" is definitely correct. Yes or no?', self.mask]),
+            ([text_a], ["\nquestion: ", text_b, "Yes or no?\nanswer:", self.mask]),
+            ([text_a], [' Are we justified in saying that "', text_b, '"?', self.mask]),
+            (["Given ", text_a], [' Should we assume that "', text_b, '" is true?', self.mask]),
+            ([text_a, " Based on the previous passage, "], ["is it true that ", '"', text_b, '"?', self.mask]),
+            (["Given ", text_a], [" Is it guaranteed true that ", '"', text_b, '"?', self.mask]),
+            (['Suppose ', text_a], [" Can we infer that ", '"', text_b, '"?', self.mask]),
+            (['Given that ', text_a], ["Does it follow that ", '"', text_b, '"?', self.mask]),
+            ([text_a], [" Question: Does this imply that ", '"', text_b, '"?', self.mask]),
+            (['Given that ', text_a], [' Therefore, it must be true that ', '"', text_b, '"?', self.mask]),
+            ([text_a], [' Do most of the above words appear in the following passage? ', text_b, self.mask]),
+            ([text_a], [' Are there lots of similar words in ', '"', text_b, '"?', self.mask]),
+            ([text_a], [' Does that have the same meaning as ', '"', text_b, '"?', self.mask]),
+            ([text_a], [' Can that be paraphrased as: ', '"', text_b, '"?', self.mask]),
+            ([text_a], [' Can that be summarized as ', '"', text_b, '"?', self.mask]),
+            ([text_a], [' Does the paragraph start with "the"? ', text_b, self.mask]),
+            ([text_a], [' Is this grammatically correct? ', text_b, self.mask]),
+            ([text_a], [' Is the sentiment positive? ', text_b, self.mask]),
+            ([text_a], [' Is this a sports news? ', text_b, self.mask]),
+            ([text_a], [' Is this French? ', text_b, self.mask]),
+            ([text_a], [' Single-family zoning is bad for American cities. ', '"', text_b, '"?', self.mask]),
+            ([text_a], [
+                ' When Bolyai sent Gauss his discovery of non-Euclidean geometry, Gauss replied that he arrived at the same results 30 years ago. "',
+                text_b, '"?', self.mask]),
+            ([text_a], [' If bonito flakes boil more than a few seconds, the stock becomes too strong? "', text_b, '"?',
+                        self.mask]),
+            ([text_a],
+             [' Inflections are annoying and thank god that Middle English got rid of most of them. "', text_b, '"?',
+              self.mask]),
+            ([text_a],
+             [' Is the pious loved by the gods because it is pious? Or is it pious because it is loved by the gods? ',
+              text_b, '"?', self.mask]),
+            ([text_b], [self.mask, text_a]),
+            ([text_a], [self.mask, text_b])
+        ]
+
+        return template_combs[self.pattern_id][0], template_combs[self.pattern_id][1]
 
     def verbalize(self, label) -> List[str]:
-        if self.pattern_id == 0 or self.pattern_id == 2 or self.pattern_id == 4:
+        if self.pattern_id == 0 or self.pattern_id == 1:
             return BoolQPVP.VERBALIZER_A[label]
         else:
             return BoolQPVP.VERBALIZER_B[label]
@@ -558,29 +694,52 @@ class MultiRcPVP(PVP):
         question = example.text_b
         answer = example.meta["answer"]
 
-        if self.pattern_id == 0:
-            return [passage, ". Question: ", question, "? Is it ", answer, "?", self.mask, "."], []
-        if self.pattern_id == 1:
-            return [passage, ". Question: ", question, '? Is the correct answer "', answer, '"?', self.mask, "."], []
-        if self.pattern_id == 2:
-            return [
-                passage,
-                ". Based on the previous passage, ",
-                question,
-                '? Is "',
-                answer,
-                '" a correct answer?',
-                self.mask,
-                ".",
-            ], []
-        if self.pattern_id == 3:
-            return [passage, question, "- [", self.mask, "]", answer], []
+        template_combs = [
+            ([passage, answer, " Using only the above description and what you know about the world, "],
+             ['"', question, '" is definitely correct. Yes or no?', self.mask]),
+            ([passage, answer], ["\nquestion: ", question, "Yes or no?\nanswer:", self.mask]),
+            ([passage, answer], [' Are we justified in saying that "', question, '"?', self.mask]),
+            (["Given ", passage, answer], [' Should we assume that "', question, '" is true?', self.mask]),
+            ([passage, answer, " Based on the previous passage, "], ["is it true that ", '"', question, '"?', self.mask]),
+            (["Given ", passage, answer], [" Is it guaranteed true that ", '"', question, '"?', self.mask]),
+            (['Suppose ', passage, answer], [" Can we infer that ", '"', question, '"?', self.mask]),
+            (['Given that ', passage, answer], ["Does it follow that ", '"', question, '"?', self.mask]),
+            ([passage, answer], [" Question: Does this imply that ", '"', question, '"?', self.mask]),
+            (['Given that ', passage, answer], [' Therefore, it must be true that ', '"', question, '"?', self.mask]),
+            ([passage, answer], [' Do most of the above words appear in the following passage? ', question, self.mask]),
+            ([passage, answer], [' Are there lots of similar words in ', '"', question, '"?', self.mask]),
+            ([passage, answer], [' Does that have the same meaning as ', '"', question, '"?', self.mask]),
+            ([passage, answer], [' Can that be paraphrased as: ', '"', question, '"?', self.mask]),
+            ([passage, answer], [' Can that be summarized as ', '"', question, '"?', self.mask]),
+            ([passage, answer], [' Does the paragraph start with "the"? ', question, self.mask]),
+            ([passage, answer], [' Is this grammatically correct? ', question, self.mask]),
+            ([passage, answer], [' Is the sentiment positive? ', question, self.mask]),
+            ([passage, answer], [' Is this a sports news? ', question, self.mask]),
+            ([passage, answer], [' Is this French? ', question, self.mask]),
+            ([passage, answer], [' Single-family zoning is bad for American cities. ', '"', question, '"?', self.mask]),
+            ([passage, answer], [
+                ' When Bolyai sent Gauss his discovery of non-Euclidean geometry, Gauss replied that he arrived at the same results 30 years ago. "',
+                question, '"?', self.mask]),
+            ([passage, answer], [' If bonito flakes boil more than a few seconds, the stock becomes too strong? "', question, '"?',
+                        self.mask]),
+            ([passage, answer],
+             [' Inflections are annoying and thank god that Middle English got rid of most of them. "', question, '"?',
+              self.mask]),
+            ([passage, answer],
+             [' Is the pious loved by the gods because it is pious? Or is it pious because it is loved by the gods? ',
+              question, '"?', self.mask]),
+            ([question], [self.mask, passage, answer]),
+            ([passage, answer], [self.mask, question])
+        ]
+
+        return template_combs[self.pattern_id][0], template_combs[self.pattern_id][1]
 
     def verbalize(self, label) -> List[str]:
-        if self.pattern_id == 3:
-            return ["False"] if label == "0" else ["True"]
+        # if self.pattern_id in [0, 1]:
+        #     return MultiRcPVP.VERBALIZER[label]
+        # else:
+        #     return ["False"] if label == "0" else ["True"]
         return MultiRcPVP.VERBALIZER[label]
-
 
 class WicPVP(PVP):
     VERBALIZER_A = {"F": ["No"], "T": ["Yes"]}

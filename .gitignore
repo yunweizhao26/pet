@@ -8,3 +8,4 @@ data/*
 out/*
 venv/*
 /wandb/
+/experiments/

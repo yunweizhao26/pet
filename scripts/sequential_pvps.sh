@@ -1,5 +1,5 @@
 #!/bin/bash
-for model in roberta-large
+for model in roberta-large roberta-base
 do
   for id in {0..26}
   do
@@ -9,7 +9,7 @@ do
       --data_dir split_data/ \
       --model_typet \
       --model_name_or_path $model \
-      --task_name rte \
+      --task_name mnli \
       --output_dir experiments/[TASK_NAME]/$model/supervised \
       --do_train \
       --do_eval \
