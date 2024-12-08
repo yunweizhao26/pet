@@ -8,5 +8,13 @@ data/*
 out/*
 venv/*
 /wandb/
-experiments/
 .history/
+
+*.txt
+*.jsonl
+*.json
+*.model
+*.bin
+
+.history/
+.idea/
