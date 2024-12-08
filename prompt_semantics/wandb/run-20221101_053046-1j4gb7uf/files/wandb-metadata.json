@@ -1,0 +1,24 @@
+{
+    "os": "Windows-10-10.0.22000-SP0",
+    "python": "3.7.13",
+    "heartbeatAt": "2022-11-01T12:30:47.415371",
+    "startedAt": "2022-11-01T12:30:46.944327",
+    "docker": null,
+    "gpu": "NVIDIA GeForce RTX 2070 SUPER",
+    "gpu_count": 1,
+    "cpu_count": 20,
+    "cuda": null,
+    "args": [],
+    "state": "running",
+    "program": ".\\src\\encoder_decoder.py",
+    "codePath": "src\\encoder_decoder.py",
+    "git": {
+        "remote": "https://github.com/ywzhao2002/prompt_semantics.git",
+        "commit": "19d92c0a17a4e6579ca6f2e11ecf3d6570709e51"
+    },
+    "email": "yzhao4@uw.edu",
+    "root": "F:/h2lab/pet/prompt_semantics",
+    "host": "DESKTOP-10MA057",
+    "username": "12463",
+    "executable": "C:\\Users\\12463\\miniconda3\\envs\\pet\\python.exe"
+}
